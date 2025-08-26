@@ -40,6 +40,11 @@ module.exports = {
         generator: {
           filename: 'images/[name][ext]',  // emitted to dist/images
         },
+      },
+      //JSON loader
+      {
+        test: /\.geojson$/,
+        type: "json"
       }
     ],
   },
