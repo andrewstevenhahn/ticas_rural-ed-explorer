@@ -14,11 +14,20 @@ body, h1, h2, h3, h4, h5, h6, p, a, button, input, textarea {
 }
 
 
-body{
-  background-color: red !important;
+/* Body background */
+body {
+  background-color: #fffbe6; /* pale yellow */
+  font-family: 'Quasimoda', sans-serif;
 }
 
-#map {
-  border: 2px solid red;
-  border-radius: 12px;
+/* Navbar background + drop shadow */
+.navbar {
+  background-color: #ffffff; /* plain white */
+  box-shadow: 0 2px 6px rgba(100, 0, 0, 0.1); /* subtle shadow */
+}
+
+/* Optional: brand/logo alignment tweaks */
+.navbar-brand img {
+  max-height: 32px;
+  margin-right: 0.5rem;
 }
