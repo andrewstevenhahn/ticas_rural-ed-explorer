@@ -4,6 +4,7 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import './styles.css';
 import logo from './assets/Books-UC-ORANGE.png';
+import czData from "./data/CZ.geojson";
 
 const logoImg = document.querySelector('.navbar-brand img');
 logoImg.src = logo;
@@ -41,7 +42,7 @@ const map = new maplibregl.Map({
 map.on("load", () => {
   map.addSource("states", {
     type: "geojson",
-    data: "/data/CZ.geojson"
+    data: czData
   });
 
   // Add a line layer to render state outlines

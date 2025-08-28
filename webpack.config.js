@@ -51,7 +51,10 @@ module.exports = {
       //JSON loader
       {
         test: /\.geojson$/,
-        type: "json"
+        type: 'asset/resource',
+        generator: {
+          filename: 'data/[name][ext]'
+        }
       }
     ],
   },
