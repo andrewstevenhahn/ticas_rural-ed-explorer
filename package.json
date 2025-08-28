@@ -5,13 +5,16 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon --watch src --exec \"webpack serve --open --mode development\"",
-    "build": "webpack --mode production"
+    "build": "webpack --mode production",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "css-loader": "^7.1.2",
+    "gh-pages": "^6.3.0",
     "html-webpack-plugin": "^5.6.4",
     "json-loader": "^0.5.7",
     "nodemon": "^3.1.10",

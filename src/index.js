@@ -8,9 +8,6 @@ import logo from './assets/Books-UC-ORANGE.png';
 const logoImg = document.querySelector('.navbar-brand img');
 logoImg.src = logo;
 
-//add data
-import czs from "./data/CZ.geojson";
-
 // Initalize map
 const map = new maplibregl.Map({
   container: "map",
@@ -44,7 +41,7 @@ const map = new maplibregl.Map({
 map.on("load", () => {
   map.addSource("states", {
     type: "geojson",
-    data: czs
+    data: "/data/CZ.geojson"
   });
 
   // Add a line layer to render state outlines
@@ -65,3 +62,9 @@ map.addControl(new maplibregl.NavigationControl());
 
 // Add fullscreen control
 map.addControl(new maplibregl.FullscreenControl(), "top-right");
+
+map.once("idle", () => {
+  document.getElementById("spinner").classList.add("hidden");
+});
+
+console.log("Success")
