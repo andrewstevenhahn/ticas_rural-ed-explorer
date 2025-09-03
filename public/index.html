@@ -64,12 +64,12 @@
             data-bs-target="#map-controls" 
             aria-expanded="false" 
             aria-controls="map-controls">
-      Filter Map
+      Map Controls
     </button>
 
     <!-- Control panel -->
     <div id="map-controls" class="collapse d-md-block position-absolute top-0 start-0 m-3 p-3 bg-white shadow rounded">
-      <h6 class="mb-2">Controls</h6>
+      <h6 class="mb-2">Map Controls</h6>
 
       <button type="button" 
           class="btn-close position-absolute top-0 end-0 m-2 d-md-none" 
@@ -79,28 +79,36 @@
 
       <!-- Dropdown -->
       <div class="mb-3">
-        <label for="regionSelect" class="form-label">Topic of Interest</label>
+        <label for="regionSelect" class="form-label">Choose crosstab metric</label>
         <select id="regionSelect" class="form-select form-select-sm">
-          <option value="all">Area Demographics</option>
-          <option value="west">Some College By Age</option>
-          <option value="west">Some College By Race/Ethnicity</option>
-          <option value="midwest">High School Completion by Age</option>
-          <option value="south">Median income by Age</option>
-          <option value="northeast">Median Income by Race/Ethnicity</option>
+          <option value="all">By Age Range</option>
+          <option value="west">By Race/ethnicity</option>
+          <option value="west">By educational attainment</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="regionSelect" class="form-label">Show institutions</label>
+        <select id="regionSelect" class="form-select form-select-sm">
+          <option value="all">All Institutions</option>
+          <option value="west">Public</option>
+          <option value="west">Private Nonprofit</option>
+          <option value="west">Four-year</option>
+          <option value="west">Two-year</option>
         </select>
       </div>
 
       <!-- Checkbox -->
-      <div class="form-check mb-3">
+      <!-- <div class="form-check mb-3">
         <input class="form-check-input" type="checkbox" id="showInst" checked>
         <label class="form-check-label" for="showInst">
           Show Institutions
         </label>
-      </div>
+      </div> -->
 
       <!-- Slider -->
       <div class="mb-3">
-        <label for="opacityRange" class="form-label">Commuting Zone Population</label>
+        <label for="opacityRange" class="form-label">Show commuting zones with population greater than...</label>
         <input type="range" class="form-range" min="0" max="100" value="70" id="populationRange">
       </div>
 
@@ -108,6 +116,30 @@
       <div class="d-grid">
         <button id="applyChanges" class="btn btn-success btn-sm">Apply Changes</button>
       </div>
+            <div class="d-grid">
+        <button class="btn btn-success btn-sm" id="reset-button">Reset Map</button>
+      </div>
+    </div>
+
+      <div class="container">
+        <div class="row">
+            <div class="col-lg-3 col-md-6 col-sm-12 chart-tile">
+                <!-- Content for Tile 1 -->
+                Chart Area: Selected geography demographics
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-12 chart-tile">
+                <!-- Content for Tile 2 -->
+                Chart Area: Selected geography current enrollment (by crosstab variable)
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-12 flex-grow-1 chart-tile">
+                <!-- Content for Tile 3 -->
+                Chart Area: Selected geogrpahy median income (by crosstab variable)
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-12 flex-grow-1 chart-tile">
+                <!-- Content for Tile 4 -->
+                Chart Area: Institutions of higher education in geography and filters
+            </div>
+        </div>
     </div>
 
 
