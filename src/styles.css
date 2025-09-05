@@ -90,7 +90,7 @@ body {
 #map-legend {
   font-size: 0.85rem;
   max-width: 150px;
-  margin-bottom: 170px !important;
+  margin-bottom: 140px !important;
 }
 
 #map-legend h6 {
@@ -146,7 +146,7 @@ body {
   background-color: #FFF;
   padding: 14px;
   margin: 14px;
-  border-radius: 6px;
+  border-radius: 0px !important;
   box-shadow: 0 2px 6px rgba(100, 0, 0, 0.2);
   height: 270px;
 }
@@ -157,6 +157,7 @@ body {
 
 .orange-bg{
   background-color: #fa634b !important;
+  border-color: #e73116 !important;
 }
 
 .orange-bg:hover {
@@ -169,6 +170,7 @@ body {
 
 .light-bg {
   background-color: #fdf6e5 !important;
+  border-color: #fa634b !important;
   color: #494949;
 }
 

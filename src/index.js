@@ -2,13 +2,14 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import Chart from "chart.js/auto"
 import './styles.css';
 import logo from './assets/Books-UC-ORANGE.png';
 
 // import geojson data
 import countyData from "./data/county_simp_num.geojson";
 import czData from "./data/cz20_simp_num.geojson";
-import instData from "./data/institution.geojson";
+import instData from "./data/institution_j.geojson";
 
 // set logo from asset
 const logoImg = document.querySelector('.navbar-brand img');
@@ -24,6 +25,9 @@ const applyButton = document.getElementById("applyChanges")
 const tiles = document.getElementsByClassName("chart-tile");
 const instCheck = document.getElementById("showInst")
 const instLegend = document.getElementById("inst-legend")
+const chartArea = document.getElementById("chartArea")
+const chartAreaWarning = document.getElementById("chartAreaWarning")
+const mapControls = document.getElementById("map-controls")
 
 // Initalize map with open source tiles 
 const map = new maplibregl.Map({
@@ -297,11 +301,34 @@ map.on('click', 'cz20', (e) => {
     center: clickedCoordinates,
     essential: true,
     zoom: 8
-  })
-  let tiles = document.getElementsByClassName("chart-tile");
-  for (let i=0; i<tiles.length; i++) {
-    tiles[i].classList.remove("hidden")
+  });
+  
+  chartArea.classList.remove("hidden")
+  chartAreaWarning.classList.add("hidden")
+
+  const countySource = map.getSource("county");
+  const instSource = map.getSource("institution");
+  if (countySource && countySource._data) {
+    const counties = countySource._data.features.filter(
+      f => f.properties.CZ20 == selectedValue
+    );
+
+    // extract an attribute to graph
+    const labels = counties.map(f => f.properties.county_name);  // county names
+    const values = counties.map(f => f.properties.pct_rural);   // attribute to plot
+    updateCountyChart(labels, values, selectedValue);
   }
+
+  if (instSource && instSource._data) {
+    const institutions = instSource._data.features.filter(
+      f => f.properties.j_CZ20 === selectedValue
+    )
+    renderInstitutionTable(institutions)
+  }
+
+  updateRaceDonutChart(e.features[0])
+  updateIncomeBarChart(e.features[0])
+  updateAttainmentChart(e.features[0])
 });
 
 map.on('click', 'county', (e) => {
@@ -320,6 +347,9 @@ map.on('click', 'county', (e) => {
   for (let i=0; i<tiles.length; i++) {
     tiles[i].classList.remove("hidden")
   }
+
+  chartAreaWarning.classList.remove('hidden')
+  chartArea.classList.add('hidden')
 });
 
 resetButton.addEventListener("click", function() {
@@ -328,15 +358,15 @@ resetButton.addEventListener("click", function() {
   map.setLayoutProperty("institution", 'visibility', 'none')
   map.setLayoutProperty("institution_labels", 'visibility', 'none');
   instLegend.classList.add('hidden')
+  mapControls.classList.remove('show')
   map.flyTo({
     center: [-95.5795, 39.8283],
     zoom: 3,
     essential: true
   });
 
-  for (let i=0; i<tiles.length; i++) {
-    tiles[i].classList.add("hidden")
-  }
+  chartArea.classList.add("hidden")
+  chartAreaWarning.classList.add('hidden')
 
   popRangeIn.value = popRangeIn.defaultValue
   rurRangeIn.value = rurRangeIn.defaultValue
@@ -368,6 +398,7 @@ applyButton.addEventListener("click", function() {
     if (instCheck.checked && map.getZoom() > 5) {
       map.setLayoutProperty("institution_labels", 'visibility', 'visible');
     }
+    mapControls.classList.remove('show')
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -386,3 +417,225 @@ popRangeIn.addEventListener('input', () => {
 rurRangeIn.addEventListener('input', () => {
   rurRangeVal.textContent = rurRangeIn.value;
 });
+
+// create and update charts 
+
+let countyChart = null;
+
+function updateCountyChart(labels, values, czValue) {
+  document.getElementById("cz-title").textContent = `Commuting Zone ${czValue}`
+  const ctx = document.getElementById("countyChart").getContext("2d");
+
+  if (countyChart) {
+    countyChart.destroy();
+  }
+
+  console.log(labels)
+  console.log(values)
+
+  countyChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: `Percent in rural areas for CZ ${czValue}`,
+          data: values,
+          backgroundColor: "rgba(54, 162, 235, 0.6)",
+          borderColor: "rgba(54, 162, 235, 1)",
+          borderWidth: 1
+        }
+      ]
+    },
+    options: {
+      indexAxis: 'y'
+    }
+  });
+}
+
+// Function to render the institution table
+function renderInstitutionTable(features) {
+  if (!features.length) {
+    document.getElementById('institutionTableContainer').innerHTML =
+      '<p class="text-muted">No institutions found for this CZ.</p>';
+    return;
+  }
+
+  let html = `
+    <table class="table table-striped table-sm">
+      <thead>
+        <tr>
+          <th>Institution</th>
+          <th>County</th>
+          <th>State</th>
+          <th>Level</th>
+          <th>Sector</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  features.forEach(f => {
+    html += `
+      <tr>
+        <td>${f.properties.institution || ''}</td>
+        <td>${f.properties.j_county_name || ''}</td>
+        <td>${f.properties.state || ''}</td>
+        <td>${f.properties.level || ''}</td>
+        <td>${f.properties.sector || ''}</td>
+      </tr>
+    `;
+  });
+
+  html += `
+      </tbody>
+    </table>
+  `;
+
+  document.getElementById('institutionTableContainer').innerHTML = html;
+}
+
+let raceDonutChart = null;
+
+function updateRaceDonutChart(czFeature) {
+  // Extract race/ethnicity columns
+  const raceCategories = ["Asian", "Black", "Hispanic", "White", "American Indian", "Multiracial", "Other"];
+  const labels = raceCategories;
+  const raceFields = ["pct_asian",	"pct_black",	"pct_hispanic",	"pct_white",	"pct_amind",	"pct_multirace",	"pct_otherrace"]
+  const values = raceFields.map(cat => Number(czFeature.properties[cat] || 0));
+  const ctx = document.getElementById("raceDonutChart").getContext("2d");
+
+  if (raceDonutChart) {
+    raceDonutChart.destroy();
+  }
+
+  raceDonutChart = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: [
+          "#007bff",
+          "#dc3545",
+          "#28a745",
+          "#ffc107",
+          "#6c757d"
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      // responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "bottom" }
+      }
+    }
+  });
+}
+
+let attainmentChart = null;
+
+function updateAttainmentChart(czFeature) {
+  // Extract race/ethnicity columns
+  const attLabels = ["No HS Diploma/GED", "High School Diploma/GED", "Some College", "College Degree"];
+  const labels = attLabels;
+  const attFields = ["pct_less_hs",	"pct_hs",	"pct_scnd",	"pct_coll"]
+  const values = attFields.map(cat => Number(czFeature.properties[cat] || 0));
+  const ctx = document.getElementById("attainmentChart").getContext("2d");
+
+  if (attainmentChart) {
+    attainmentChart.destroy();
+  }
+
+  attainmentChart = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: [
+          "#007bff",
+          "#dc3545",
+          "#28a745",
+          "#ffc107",
+          "#6c757d"
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      // responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "bottom" }
+      }
+    }
+  });
+}
+
+
+
+let incomeBarChart = null;
+
+function updateIncomeBarChart(czFeature) {
+
+  // const raceCategories = ["Asian", "Black", "Hispanic", "White", "American Indian", "Multiracial", "Other"];
+  // const labels = raceCategories;
+  // const values = raceFields.map(cat => Number(czFeature.properties[cat] || 0));
+
+  // Define education categories
+  const eduCategories = ["High School Diploma/GED", "Some College but No Degree", "College Degree"];
+  const incFields = ["mdn_inc_hs",	"mdn_inc_scnd",	"mdn_inc_coll"]
+
+  // Extract values
+  const values = incFields.map(cat => Number(czFeature.properties[cat]));
+
+  const ctx = document.getElementById("incomeBarChart").getContext("2d");
+
+  // Destroy previous chart if it exists
+  if (incomeBarChart) {
+    incomeBarChart.destroy();
+  }
+
+  incomeBarChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: eduCategories,
+      datasets: [{
+        label: "Median Income ($)",
+        data: values,
+        backgroundColor: "rgba(75, 192, 192, 0.6)",
+        borderColor: "rgba(75, 192, 192, 1)",
+        borderWidth: 1
+      }]
+    },
+    options: {
+      indexAxis: "y", // horizontal bars
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return `$${context.parsed.x.toLocaleString()}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          ticks: {
+            callback: value => `$${value.toLocaleString()}`
+          }
+        },
+        y: {
+          beginAtZero: false
+        }
+      }
+    }
+  });
+}
