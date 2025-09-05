@@ -47,7 +47,8 @@ const map = new maplibregl.Map({
         minzoom: 0,
         maxzoom: 19
       }
-    ]
+    ],
+    glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf"
   },
   center: [-95.5795, 39.8283],
   zoom: 3,
@@ -128,7 +129,27 @@ map.on("load", () => {
     }
   });
 
-  map.setLayoutProperty("institution", 'visibility', 'none')
+  // render inst labels 
+    map.addLayer({
+    id:"institution_labels",
+    type: "symbol",
+    source: "institution",
+    layout: {
+      'text-field': ['get', 'institution'],
+      'text-size': 10,
+      'text-offset': [0,1.2],
+      'text-anchor': 'top',
+      'text-allow-overlap': false
+    },
+    paint: {
+      'text-color': '#000',
+      'text-halo-color': '#fff',
+      'text-halo-width': 2
+    }
+  });
+
+  map.setLayoutProperty("institution", 'visibility', 'none');
+  map.setLayoutProperty("institution_labels", 'visibility', 'none');
 });
 
 
@@ -151,6 +172,35 @@ const popup = new maplibregl.Popup({
 });
 
 let currentFeatureId = undefined;
+
+map.on('mousemove', 'institution', (e) => {
+  if (!e.features || e.features.length === 0) return;
+  const feature = e.features[0];
+  console.log(feature.properties)
+  currentFeatureId = feature.properties.institution;
+  popup.remove(); 
+  map.getCanvas().style.cursor = 'pointer';
+
+  let instname = feature.properties.institution;
+  let inststate = feature.properties.state;
+  let instlevel = feature.properties.level;
+  let instsector = feature.properties.sector;
+
+  const instTooltip = 
+  '<div class="map-tooltip">'+
+  '<h7><strong>' + instname + '(' + inststate + ')' + '</strong></h7>' +
+  '<p>' + instsector + " " + instlevel +'</p>' +
+  '</div>'
+
+  // Use the mouse position instead of polygon coordinates
+  popup.setLngLat(e.lngLat).setHTML(instTooltip).addTo(map);
+});
+
+map.on('mouseleave', 'instituiton', () => {
+  currentFeatureId = undefined;
+  map.getCanvas().style.cursor = '';
+  popup.remove();
+});
 
 map.on('mousemove', 'cz20', (e) => {
   if (!e.features || e.features.length === 0) return;
@@ -234,6 +284,7 @@ map.on('click', 'cz20', (e) => {
   map.setLayoutProperty('cz20', 'visibility', 'none')
   map.setLayoutProperty('county', 'visibility', 'visible')
   map.setLayoutProperty("institution", 'visibility', 'visible')
+  map.setLayoutProperty("institution_labels", 'visibility', 'visible');
   map.setFilter('county', ['==', ['get', 'CZ20'], selectedValue])
   map.flyTo({
     center: clickedCoordinates,
@@ -265,6 +316,7 @@ resetButton.addEventListener("click", function() {
   map.setLayoutProperty('cz20', 'visibility', 'visible')
   map.setLayoutProperty('county', 'visibility', 'none')
   map.setLayoutProperty("institution", 'visibility', 'none')
+  map.setLayoutProperty("institution_labels", 'visibility', 'none');
   map.flyTo({
     center: [-95.5795, 39.8283],
     zoom: 3,
