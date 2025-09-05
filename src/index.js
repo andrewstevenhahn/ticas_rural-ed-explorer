@@ -23,6 +23,7 @@ const resetButton = document.getElementById("reset-button");
 const applyButton = document.getElementById("applyChanges")
 const tiles = document.getElementsByClassName("chart-tile");
 const instCheck = document.getElementById("showInst")
+const instLegend = document.getElementById("inst-legend")
 
 // Initalize map with open source tiles 
 const map = new maplibregl.Map({
@@ -119,10 +120,12 @@ map.on("load", () => {
     type: "circle",
     source: "institution",
     paint: {
+      "circle-stroke-width": 1,
+      "circle-stroke-color": "#fff",
       "circle-color": [
       'match', ['get', 'level'],
-      'Public', '#e41a1c',
-      'Private non-profit', '#377eb8',
+      'Public', '#fa634b',
+      'Private non-profit', 'rgb(52, 66, 115)',
       '#999999' // default
     ],
       "circle-radius": 4
@@ -136,7 +139,7 @@ map.on("load", () => {
     source: "institution",
     layout: {
       'text-field': ['get', 'institution'],
-      'text-size': 10,
+      'text-size': 12,
       'text-offset': [0,1.2],
       'text-anchor': 'top',
       'text-allow-overlap': false
@@ -283,8 +286,12 @@ map.on('click', 'cz20', (e) => {
   const selectedValue = e.features[0].properties.CZ20;
   map.setLayoutProperty('cz20', 'visibility', 'none')
   map.setLayoutProperty('county', 'visibility', 'visible')
-  map.setLayoutProperty("institution", 'visibility', 'visible')
-  map.setLayoutProperty("institution_labels", 'visibility', 'visible');
+  
+  if (instCheck.checked) {
+    map.setLayoutProperty("institution", 'visibility', 'visible')
+    map.setLayoutProperty("institution_labels", 'visibility', 'visible');
+    instLegend.classList.remove('hidden')
+  }
   map.setFilter('county', ['==', ['get', 'CZ20'], selectedValue])
   map.flyTo({
     center: clickedCoordinates,
@@ -301,6 +308,9 @@ map.on('click', 'county', (e) => {
   const clickedCoordinates = e.lngLat;
   if(!e.features.length) return;
   const selectedValue = e.features[0].properties.GEOID;
+  map.setLayoutProperty("institution_labels", 'visibility', 'visible')
+  map.setLayoutProperty("institution", 'visibility', 'visible')
+  instLegend.classList.remove('hidden')
   map.setFilter('county', ['==', ['get', 'GEOID'], selectedValue])
   map.flyTo({
     center: clickedCoordinates,
@@ -317,6 +327,7 @@ resetButton.addEventListener("click", function() {
   map.setLayoutProperty('county', 'visibility', 'none')
   map.setLayoutProperty("institution", 'visibility', 'none')
   map.setLayoutProperty("institution_labels", 'visibility', 'none');
+  instLegend.classList.add('hidden')
   map.flyTo({
     center: [-95.5795, 39.8283],
     zoom: 3,
@@ -345,11 +356,17 @@ applyButton.addEventListener("click", function() {
       ["<=", ["get", "pop2020"], Number(popRangeIn.value)],
       [">=", ["get", "pct_rural"], Number(rurRangeIn.value)/100]
     ]);
-
     if (instCheck.checked) {
       map.setLayoutProperty("institution", 'visibility', 'visible')
+      instLegend.classList.remove('hidden')
     } else {
-      map.setLayoutProperty("institution", 'visibility', 'none')
+      map.setLayoutProperty("institution", 'visibility', 'none');
+      map.setLayoutProperty("institution_labels", 'visibility', 'none');
+      instLegend.classList.add('hidden')
+    }
+
+    if (instCheck.checked && map.getZoom() > 5) {
+      map.setLayoutProperty("institution_labels", 'visibility', 'visible');
     }
 });
 
@@ -369,7 +386,3 @@ popRangeIn.addEventListener('input', () => {
 rurRangeIn.addEventListener('input', () => {
   rurRangeVal.textContent = rurRangeIn.value;
 });
-
-// // Apply button logic (filter features in "layerB")
-// document.getElementById('applyBtn').addEventListener('click', () => {
-//   const sliderValue = Number(rangeInput.value);

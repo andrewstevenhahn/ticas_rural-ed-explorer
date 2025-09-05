@@ -105,6 +105,19 @@ body {
   border: 1px solid #ccc;
 }
 
+#inst-legend {
+  margin-top: 10px;
+}
+
+.inst-legend-color {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  border: 1px solid #ccc;
+}
+
 #map-controls {
   font-size: 0.85rem;
   max-width: 220px;

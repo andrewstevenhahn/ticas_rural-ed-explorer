@@ -68,7 +68,7 @@
     <div id="spinner" class="flex-grow-1"></div>
     <div id="map"></div>
 
-    <div id="map-legend" class="position-absolute bottom-0 end-0 m-3 p-3 bg-white shadow rounded">
+    <div id="map-legend" class="position-absolute bottom-0 end-0 m-4 p-3 bg-white shadow rounded">
       <h8 class="mb-2">Rural Population</h8>
       <div class="d-flex align-items-center">
         <span class="legend-color" style="background:#ffffcc;"></span><small class="ms-2">0-20%</small>
@@ -84,6 +84,15 @@
       </div>
       <div class="d-flex align-items-center">
         <span class="legend-color" style="background:#253494;"></span><small class="ms-2">80%+</small>
+      </div>
+      <div id="inst-legend" class="hidden">
+        <h8 class="mb-2">Institution Level</h8>
+        <div class="d-flex align-items-center">
+          <span class="inst-legend-color" style="background:#fa634b;"></span><small class="ms-1">Public</small>
+        </div>
+        <div class="d-flex align-items-center">
+          <span class="inst-legend-color" style="background:rgb(52, 66, 115);"></span><small class="ms-1">Private non-profit</small>
+        </div>
       </div>
     </div>
 
@@ -131,7 +140,7 @@
 
       <div class="mb-3">
         <label for="opacityRange" class="form-label">Show commuting zones with population less than...</label>
-        <input type="range" class="form-range" min="0" max="4500000" value="46000000" step="100000" id="populationRange">
+        <input type="range" class="form-range" min="0" max="46000000" value="46000000" step="100000" id="populationRange">
         <div>
           <p><span id="populationRangeValue">46,000,000</span></p>
         </div>
