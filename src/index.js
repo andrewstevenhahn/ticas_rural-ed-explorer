@@ -14,6 +14,16 @@ import instData from "./data/institution.geojson";
 const logoImg = document.querySelector('.navbar-brand img');
 logoImg.src = logo;
 
+// define DOM elements
+const popRangeIn = document.getElementById('populationRange');
+const rurRangeIn = document.getElementById('ruralRange');
+const rurRangeVal = document.getElementById('ruralRangeValue');
+const popRangeVal = document.getElementById('populationRangeValue');
+const resetButton = document.getElementById("reset-button");
+const applyButton = document.getElementById("applyChanges")
+const tiles = document.getElementsByClassName("chart-tile");
+const instCheck = document.getElementById("showInst")
+
 // Initalize map with open source tiles 
 const map = new maplibregl.Map({
   container: "map",
@@ -153,11 +163,27 @@ map.on('mousemove', 'cz20', (e) => {
   // Change the cursor
   map.getCanvas().style.cursor = 'pointer';
 
+  let pop_str
+  let rur_str
+  const pop_num = feature.properties.pop2020
+  const rur_num = feature.properties.pct_rural
+  if (pop_num) {
+    pop_str = feature.properties.pop2020.toLocaleString()
+  } else {
+    pop_str = "N/A"
+  }
+
+  if (rur_num) {
+    rur_str = (feature.properties.pct_rural *100).toFixed(0) +'%'
+  } else {
+    rur_str = "N/A"
+  }
+
   const description = 
   '<div class="map-tooltip">'+
   '<h7><strong>Commuting Zone ' + feature.properties.CZ20 + '</strong></h7>' +
-  '<p>Population 2020: ' + feature.properties.pop2020.toLocaleString()+'</p>' +
-  '<p>Percent Rural: ' + (feature.properties.pct_rural *100).toFixed(0) +'%</p>' +
+  '<p>Population 2020: ' + pop_str +'</p>' +
+  '<p>Percent Rural: '+ rur_str + '</p>' +
   '<p><em>Click for more details</em></p>'+
   '</div>'
 
@@ -214,6 +240,10 @@ map.on('click', 'cz20', (e) => {
     essential: true,
     zoom: 8
   })
+  let tiles = document.getElementsByClassName("chart-tile");
+  for (let i=0; i<tiles.length; i++) {
+    tiles[i].classList.remove("hidden")
+  }
 });
 
 map.on('click', 'county', (e) => {
@@ -226,9 +256,11 @@ map.on('click', 'county', (e) => {
     essential: true,
     zoom: 9
   })
+  for (let i=0; i<tiles.length; i++) {
+    tiles[i].classList.remove("hidden")
+  }
 });
 
-const resetButton = document.getElementById("reset-button")
 resetButton.addEventListener("click", function() {
   map.setLayoutProperty('cz20', 'visibility', 'visible')
   map.setLayoutProperty('county', 'visibility', 'none')
@@ -237,5 +269,55 @@ resetButton.addEventListener("click", function() {
     center: [-95.5795, 39.8283],
     zoom: 3,
     essential: true
-  })
+  });
+
+  for (let i=0; i<tiles.length; i++) {
+    tiles[i].classList.add("hidden")
+  }
+
+  popRangeIn.value = popRangeIn.defaultValue
+  rurRangeIn.value = rurRangeIn.defaultValue
+  popRangeVal.textContent = '46,000,000'
+  rurRangeVal.textContent = '0'
+
+  map.setFilter('cz20', null)
+
+  instCheck.value = instCheck.defaultValue
+  instCheck.checked = false;
+  });
+
+  
+applyButton.addEventListener("click", function() {
+    map.setFilter("cz20", [
+      "all",
+      ["<=", ["get", "pop2020"], Number(popRangeIn.value)],
+      [">=", ["get", "pct_rural"], Number(rurRangeIn.value)/100]
+    ]);
+
+    if (instCheck.checked) {
+      map.setLayoutProperty("institution", 'visibility', 'visible')
+    } else {
+      map.setLayoutProperty("institution", 'visibility', 'none')
+    }
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+  const introModal = new bootstrap.Modal(document.getElementById('introModal'), {
+    backdrop: 'static',
+    keyboard: true
+  });
+  introModal.show();
+});
+
+// Update on slider move
+popRangeIn.addEventListener('input', () => {
+  popRangeVal.textContent = Number(popRangeIn.value).toLocaleString();
+});
+
+rurRangeIn.addEventListener('input', () => {
+  rurRangeVal.textContent = rurRangeIn.value;
+});
+
+// // Apply button logic (filter features in "layerB")
+// document.getElementById('applyBtn').addEventListener('click', () => {
+//   const sliderValue = Number(rangeInput.value);

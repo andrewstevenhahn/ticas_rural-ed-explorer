@@ -33,6 +33,37 @@
   </nav>
 
   <!-- Main Content -->
+
+  <div class="modal fade" id="introModal" tabindex="-1" aria-labelledby="introModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content shadow-lg">
+        <div class="modal-header">
+          <h5 class="modal-title" id="introModalLabel">TICAS Rural Reconnect Map (beta)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>This is a test version of a data product by The Institute for College Access & Success (TICAS) presented in partnership with
+            <a href="https://www.mdrc.org/">MDRC</a>.
+          </p>
+          <p>
+            To use the map, use the control panel on the right to make adjustments to the map. Click on a commuting zone to view county-level
+            data. Clicking on a commuter zone or county displays demographic and education data below the map. On mobile, click the button in the top right
+            corner to display the control panel. 
+          </p>
+          <p>
+            Use the links in the navigation bar above to learn more about TICAS and the rural reconnect initiative.
+          </p>
+          <p>
+            Data downloads are not currently available, but will be made available after official release.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Continue</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <main class="flex-grow-1 container-fluid wrapper">
     <div id="spinner" class="flex-grow-1"></div>
     <div id="map"></div>
@@ -69,7 +100,7 @@
 
     <!-- Control panel -->
     <div id="map-controls" class="collapse d-md-block position-absolute top-0 start-0 m-3 p-3 bg-white shadow rounded">
-      <h6 class="mb-2">Map Controls</h6>
+      <h6 class="mb-2">Filter Commuting Zones</h6>
 
       <button type="button" 
           class="btn-close position-absolute top-0 end-0 m-2 d-md-none" 
@@ -78,16 +109,16 @@
           aria-label="Close"></button>
 
       <!-- Dropdown -->
-      <div class="mb-3">
+      <!-- <div class="mb-3">
         <label for="regionSelect" class="form-label">Choose crosstab metric</label>
         <select id="regionSelect" class="form-select form-select-sm">
           <option value="all">By Age Range</option>
           <option value="west">By Race/ethnicity</option>
           <option value="west">By educational attainment</option>
         </select>
-      </div>
+      </div> -->
 
-      <div class="mb-3">
+      <!-- <div class="mb-3">
         <label for="regionSelect" class="form-label">Show institutions</label>
         <select id="regionSelect" class="form-select form-select-sm">
           <option value="all">All Institutions</option>
@@ -96,46 +127,54 @@
           <option value="west">Four-year</option>
           <option value="west">Two-year</option>
         </select>
-      </div>
-
-      <!-- Checkbox -->
-      <!-- <div class="form-check mb-3">
-        <input class="form-check-input" type="checkbox" id="showInst" checked>
-        <label class="form-check-label" for="showInst">
-          Show Institutions
-        </label>
       </div> -->
 
-      <!-- Slider -->
       <div class="mb-3">
-        <label for="opacityRange" class="form-label">Show commuting zones with population greater than...</label>
-        <input type="range" class="form-range" min="0" max="100" value="70" id="populationRange">
+        <label for="opacityRange" class="form-label">Show commuting zones with population less than...</label>
+        <input type="range" class="form-range" min="0" max="4500000" value="46000000" step="100000" id="populationRange">
+        <div>
+          <p><span id="populationRangeValue">46,000,000</span></p>
+        </div>
       </div>
 
-      <!-- Apply Button -->
+      <div class="mb-3">
+        <label for="opacityRange" class="form-label">Show commuting zones with rural population greater than...</label>
+        <input type="range" class="form-range" min="0" max="100" value="0" step="5" id="ruralRange">
+        <div>
+          <p><span id="ruralRangeValue">0</span>%</p>
+        </div>
+      </div>
+
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="showInst">
+        <label class="form-check-label" for="showInst">
+          Overlay institutions
+        </label>
+      </div>
+
       <div class="d-grid">
-        <button id="applyChanges" class="btn btn-success btn-sm">Apply Changes</button>
+        <button id="applyChanges" class="btn btn-success btn-sm orange-bg">Apply Changes</button>
       </div>
             <div class="d-grid">
-        <button class="btn btn-success btn-sm" id="reset-button">Reset Map</button>
+        <button class="btn btn-success btn-sm light-bg" id="reset-button">Reset Map</button>
       </div>
     </div>
 
       <div class="container">
         <div class="row">
-            <div class="col-lg-3 col-md-6 col-sm-12 chart-tile">
+            <div class="col-lg-3 col-md-6 col-sm-12 chart-tile hidden" id="info-tile">
                 <!-- Content for Tile 1 -->
                 Chart Area: Selected geography demographics
             </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 chart-tile">
+            <div class="col-lg-3 col-md-6 col-sm-12 chart-tile hidden" id="graph-1">
                 <!-- Content for Tile 2 -->
                 Chart Area: Selected geography current enrollment (by crosstab variable)
             </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 flex-grow-1 chart-tile">
+            <div class="col-lg-3 col-md-6 col-sm-12 flex-grow-1 chart-tile hidden" id="graph-2">
                 <!-- Content for Tile 3 -->
                 Chart Area: Selected geography median income (by crosstab variable)
             </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 flex-grow-1 chart-tile">
+            <div class="col-lg-3 col-md-6 col-sm-12 flex-grow-1 chart-tile hidden" id="graph-3">
                 <!-- Content for Tile 4 -->
                 Chart Area: Institutions of higher education in geography and filters
             </div>

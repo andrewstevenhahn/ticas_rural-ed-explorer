@@ -70,7 +70,7 @@ body {
   height: 60px;
   margin: -30px 0 0 -30px;
   border: 6px solid #ccc;
-  border-top: 6px solid #0077ff;
+  border-top: 6px solid #fa634b;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   z-index: 999;
@@ -109,6 +109,8 @@ body {
   font-size: 0.85rem;
   max-width: 220px;
   margin-top: 72px !important;
+  box-shadow: 0 2px 6px rgba(100, 0, 0, 0.2);
+
 }
 
 #controls-toggle {
@@ -134,4 +136,30 @@ body {
   border-radius: 6px;
   box-shadow: 0 2px 6px rgba(100, 0, 0, 0.2);
   height: 270px;
+}
+
+.hidden {
+  display: none;
+}
+
+.orange-bg{
+  background-color: #fa634b !important;
+}
+
+.orange-bg:hover {
+  color: #adadad;
+}
+
+.purple-bg {
+  background-color: rgb(52, 66, 115) !important;
+}
+
+.light-bg {
+  background-color: #fdf6e5 !important;
+  color: #494949;
+}
+
+.light-bg:hover {
+  background-color: #fdf6e5 !important;
+  color: #adadad;
 }
