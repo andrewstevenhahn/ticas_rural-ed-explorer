@@ -29,6 +29,9 @@ const chartArea = document.getElementById("chartArea")
 const chartAreaWarning = document.getElementById("chartAreaWarning")
 const mapControls = document.getElementById("map-controls")
 
+// initialize chart objects
+let countyRuralChart = null;
+
 // Initalize map with open source tiles 
 const map = new maplibregl.Map({
   container: "map",
@@ -60,7 +63,9 @@ const map = new maplibregl.Map({
   cooperativeGestures: true
 });
 
-//handle events
+// handle events
+
+// initialization
 map.on("load", () => {
 
   // add source data
@@ -159,7 +164,6 @@ map.on("load", () => {
   map.setLayoutProperty("institution_labels", 'visibility', 'none');
 });
 
-
 // Add zoom/rotation controls
 map.addControl(new maplibregl.NavigationControl());
 
@@ -171,15 +175,14 @@ map.once("idle", () => {
   document.getElementById("spinner").classList.add("hidden");
 });
 
-
 // Create a popup, but don't add it to the map yet
 const popup = new maplibregl.Popup({
   closeButton: false,
   closeOnClick: false
 });
 
+// handle mouse movement
 let currentFeatureId = undefined;
-
 map.on('mousemove', 'institution', (e) => {
   if (!e.features || e.features.length === 0) return;
   const feature = e.features[0];
@@ -284,6 +287,7 @@ map.on('mouseleave', 'cz20', () => {
   popup.remove();
 });
 
+// handle clicks
 map.on('click', 'cz20', (e) => {
   const clickedCoordinates = e.lngLat;
   if(!e.features.length) return;
@@ -313,10 +317,11 @@ map.on('click', 'cz20', (e) => {
       f => f.properties.CZ20 == selectedValue
     );
 
-    // extract an attribute to graph
-    const labels = counties.map(f => f.properties.county_name);  // county names
-    const values = counties.map(f => f.properties.pct_rural);   // attribute to plot
-    updateCountyChart(labels, values, selectedValue);
+    // update tile 1
+    const labels = counties.map(f => f.properties.county_name); 
+    const values = counties.map(f => f.properties.pct_rural);
+    document.getElementById("cz-title").textContent = `Commuting Zone ${selectedValue}`
+    countyRuralChart = updateBarChart(labels, values, "countyChart", countyRuralChart)
   }
 
   if (instSource && instSource._data) {
@@ -329,6 +334,8 @@ map.on('click', 'cz20', (e) => {
   updateRaceDonutChart(e.features[0])
   updateIncomeBarChart(e.features[0])
   updateAttainmentChart(e.features[0])
+
+  chartArea.scrollIntoView({behavior: 'smooth'})
 });
 
 map.on('click', 'county', (e) => {
@@ -348,10 +355,19 @@ map.on('click', 'county', (e) => {
     tiles[i].classList.remove("hidden")
   }
 
-  chartAreaWarning.classList.remove('hidden')
-  chartArea.classList.add('hidden')
+  chartArea.scrollIntoView({behavior: 'smooth'})
+
+  // update tile 1
+  highlightBar(countyRuralChart, e.features[0].properties.county_name)
+  updateRaceDonutChart(e.features[0])
+  updateIncomeBarChart(e.features[0])
+  updateAttainmentChart(e.features[0])
+
+  // chartAreaWarning.classList.remove('hidden')
+  // chartArea.classList.add('hidden')
 });
 
+// reset button
 resetButton.addEventListener("click", function() {
   map.setLayoutProperty('cz20', 'visibility', 'visible')
   map.setLayoutProperty('county', 'visibility', 'none')
@@ -379,7 +395,7 @@ resetButton.addEventListener("click", function() {
   instCheck.checked = false;
   });
 
-  
+// apply button
 applyButton.addEventListener("click", function() {
     map.setFilter("cz20", [
       "all",
@@ -401,6 +417,7 @@ applyButton.addEventListener("click", function() {
     mapControls.classList.remove('show')
 });
 
+// show instructions once everything is loaded
 document.addEventListener('DOMContentLoaded', () => {
   const introModal = new bootstrap.Modal(document.getElementById('introModal'), {
     backdrop: 'static',
@@ -420,7 +437,39 @@ rurRangeIn.addEventListener('input', () => {
 
 // create and update charts 
 
-let countyChart = null;
+
+function updateBarChart(labels, values, chartId, chartObject) {
+  const ctx = document.getElementById(chartId).getContext("2d");
+  if (chartObject) {
+    chartObject.destroy()
+  }
+
+  chartObject = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: `Percent in rural areas`,
+          data: values,
+          backgroundColor: "rgba(54, 162, 235, 0.6)",
+          borderColor: "rgba(54, 162, 235, 1)",
+          highlightFill: "rgba(151,187,205,0.75)",
+          highlightStroke: "rgba(220,220,220,1)",
+          borderWidth: 1
+        }
+      ]
+    },
+    options: {
+      indexAxis: 'y'
+    }
+  });
+
+  return chartObject;
+}
+
+
+
 
 function updateCountyChart(labels, values, czValue) {
   document.getElementById("cz-title").textContent = `Commuting Zone ${czValue}`
@@ -638,4 +687,20 @@ function updateIncomeBarChart(czFeature) {
       }
     }
   });
+}
+
+function highlightBar(chart, idValue) {
+  // this clears off any tooltip highlights
+  chart.update();
+
+  const dataset = chart.data.datasets[0]
+  const labels = chart.data.labels
+
+  dataset.backgroundColor = labels.map(() => "rgba(75, 192, 192, 0.6)");
+  const index = labels.indexOf(idValue)
+  dataset.backgroundColor[index] = "rgba(255, 99, 132, 0.8)";
+
+
+
+  chart.update();
 }
