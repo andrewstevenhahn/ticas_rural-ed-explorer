@@ -7,8 +7,8 @@ import './styles.css';
 import logo from './assets/Books-UC-ORANGE.png';
 
 // import geojson data
-import countyData from "./data/county_simp_num.geojson";
-import czData from "./data/cz20_simp_num.geojson";
+import countyData from "./data/corrected_county_num.geojson";
+import czData from "./data/corrected_county_num_3.geojson";
 import instData from "./data/institution_j.geojson";
 
 // set logo from asset
@@ -215,20 +215,22 @@ map.on('mouseleave', 'instituiton', () => {
 map.on('mousemove', 'cz20', (e) => {
   if (!e.features || e.features.length === 0) return;
   const feature = e.features[0];
+  console.log(feature.properties)
+
 
   // Use feature.id to detect changes instead of coordinates
   // if (currentFeatureId !== feature.properties.CZ20) {
-  currentFeatureId = feature.properties.CZ20;
+  currentFeatureId = feature.properties.CZ2020;
 
   // Change the cursor
   map.getCanvas().style.cursor = 'pointer';
 
   let pop_str
   let rur_str
-  const pop_num = feature.properties.pop2020
+  const pop_num = feature.properties.pop2024
   const rur_num = feature.properties.pct_rural
   if (pop_num) {
-    pop_str = feature.properties.pop2020.toLocaleString()
+    pop_str = feature.properties.pop2024.toLocaleString()
   } else {
     pop_str = "N/A"
   }
@@ -241,7 +243,7 @@ map.on('mousemove', 'cz20', (e) => {
 
   const description = 
   '<div class="map-tooltip">'+
-  '<h7><strong>Commuting Zone ' + feature.properties.CZ20 + '</strong></h7>' +
+  '<h7><strong>Commuting Zone ' + feature.properties.CZ2020 + '</strong></h7>' +
   '<p>Population 2020: ' + pop_str +'</p>' +
   '<p>Percent Rural: '+ rur_str + '</p>' +
   '<p><em>Click for more details</em></p>'+
@@ -271,7 +273,7 @@ map.on('mousemove', 'county', (e) => {
   const description = 
   '<div class="map-tooltip">'+
   '<h7><strong>' + feature.properties.county_name + ", " + feature.properties.state + '</strong></h7>' +
-  '<p>Population 2020: ' + feature.properties.pop2020.toLocaleString()+'</p>' +
+  '<p>Population 2020: ' + feature.properties.pop2024.toLocaleString()+'</p>' +
   '<p>Percent Rural: ' + (feature.properties.pct_rural *100).toFixed(0) +'%</p>' +
   '<p><em>Click for more details</em></p>'+
   '</div>'
@@ -291,7 +293,7 @@ map.on('mouseleave', 'cz20', () => {
 map.on('click', 'cz20', (e) => {
   const clickedCoordinates = e.lngLat;
   if(!e.features.length) return;
-  const selectedValue = e.features[0].properties.CZ20;
+  const selectedValue = e.features[0].properties.CZ2020;
   map.setLayoutProperty('cz20', 'visibility', 'none')
   map.setLayoutProperty('county', 'visibility', 'visible')
   
@@ -399,7 +401,7 @@ resetButton.addEventListener("click", function() {
 applyButton.addEventListener("click", function() {
     map.setFilter("cz20", [
       "all",
-      ["<=", ["get", "pop2020"], Number(popRangeIn.value)],
+      ["<=", ["get", "pop2024"], Number(popRangeIn.value)],
       [">=", ["get", "pct_rural"], Number(rurRangeIn.value)/100]
     ]);
     if (instCheck.checked) {
