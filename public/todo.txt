@@ -1,8 +1,0 @@
-1. Implement new data from Ellie in December
-2. Implement new features requested at last meeting. 
-3. Publish to same URL and send to Veronica for testing. 
-4. Embed in WordPress environment from GitHub
-5. Update documentation and send invoice. 
-
-
-Plan your obsessions. Each week, one obsession. Vary obsessions by severity and whimsy. For example, one week your obsession should be your job. The next week, it could be a video game. 

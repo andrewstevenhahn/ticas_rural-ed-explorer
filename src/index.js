@@ -706,3 +706,16 @@ function highlightBar(chart, idValue) {
 
   chart.update();
 }
+
+function getAttrs(obj) {
+
+
+}
+
+function barChart() {
+
+}
+
+function donutChart() {
+
+}
