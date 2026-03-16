@@ -24,6 +24,7 @@
     "webpack-dev-server": "^5.2.2"
   },
   "dependencies": {
+    "@maplibre/maplibre-gl-geocoder": "^1.9.4",
     "bootstrap": "^5.3.7",
     "chart.js": "^4.5.0",
     "d3": "^7.9.0",
