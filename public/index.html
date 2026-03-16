@@ -11,18 +11,13 @@
   <!-- Top Navbar -->
   <nav class="navbar navbar-expand-lg navbar-light">
     <div class="container-fluid">
-      <!-- Logo -->
       <a class="navbar-brand d-flex align-items-center" href="https://ticas.org/">
         <img src="" alt="Org Logo" height="30" class="d-inline-block align-text-top me-2">
       </a>
-
-      <!-- Collapsible Button -->
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-              aria-controls="#navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+              aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-
-      <!-- Nav Links -->
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item"><a class="nav-link" href="https://ticas.org/">TICAS Home</a></li>
@@ -33,8 +28,7 @@
     </div>
   </nav>
 
-  <!-- Main Content -->
-
+  <!-- Intro modal -->
   <div class="modal fade" id="introModal" tabindex="-1" aria-labelledby="introModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content shadow-lg">
@@ -51,12 +45,8 @@
             demographic and education data in the panel to the right. On mobile, click the button in the top left corner to display
             the control panel.
           </p>
-          <p>
-            Use the links in the navigation bar above to learn more about TICAS and the rural reconnect initiative.
-          </p>
-          <p>
-            Data downloads are not currently available, but will be made available after official release.
-          </p>
+          <p>Use the links in the navigation bar above to learn more about TICAS and the rural reconnect initiative.</p>
+          <p>Data downloads are not currently available, but will be made available after official release.</p>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-primary purple-bg" data-bs-dismiss="modal">Continue</button>
@@ -65,7 +55,7 @@
     </div>
   </div>
 
-  <main class="flex-grow-1 container-fluid wrapper">
+  <main class="flex-grow-1 container-fluid">
 
     <!-- Map + chart side panel -->
     <div id="map-wrapper">
@@ -75,7 +65,7 @@
         <div id="map"></div>
 
         <div id="map-legend" class="position-absolute bottom-0 end-0 m-4 p-3 bg-white shadow rounded">
-          <h8 class="mb-2">Rural Population</h8>
+          <h6 class="mb-2">Rural Population</h6>
           <div class="d-flex align-items-center">
             <span class="legend-color" style="background:#ffffcc;"></span><small class="ms-2">0-20%</small>
           </div>
@@ -92,7 +82,7 @@
             <span class="legend-color" style="background:#253494;"></span><small class="ms-2">80%+</small>
           </div>
           <div id="inst-legend" class="hidden">
-            <h8 class="mb-2">Institutions</h8>
+            <h6 class="mb-2 mt-2">Institutions</h6>
             <div class="d-flex align-items-center">
               <span class="inst-legend-color" style="background:#fa634b;"></span><small class="ms-1">Public</small>
             </div>
@@ -102,7 +92,7 @@
           </div>
         </div>
 
-        <!-- Toggle button (only shows on small screens) -->
+        <!-- Toggle button (mobile only) -->
         <button id="controls-toggle"
                 class="btn btn-primary position-absolute top-0 start-0 m-3 d-md-none orange-bg"
                 type="button"
@@ -123,42 +113,26 @@
               data-bs-target="#map-controls"
               aria-label="Close"></button>
 
-          <!-- Dropdown -->
-          <!-- <div class="mb-3">
-            <label for="regionSelect" class="form-label">Choose crosstab metric</label>
-            <select id="regionSelect" class="form-select form-select-sm">
-              <option value="all">By Age Range</option>
-              <option value="west">By Race/ethnicity</option>
-              <option value="west">By educational attainment</option>
-            </select>
-          </div> -->
-
           <div class="mb-3">
             <label for="czSearch" class="form-label">Search by city or county</label>
             <input type="text" class="form-control form-control-sm" id="czSearch" placeholder="e.g. Laredo, TX">
           </div>
 
           <div class="mb-3">
-            <label for="opacityRange" class="form-label">Show commuting zones with population less than...</label>
+            <label for="populationRange" class="form-label">Show commuting zones with population less than...</label>
             <input type="range" class="form-range" min="0" max="46000000" value="46000000" step="100000" id="populationRange">
-            <div>
-              <p><span id="populationRangeValue">46,000,000</span></p>
-            </div>
+            <p><span id="populationRangeValue">46,000,000</span></p>
           </div>
 
           <div class="mb-3">
-            <label for="opacityRange" class="form-label">Show commuting zones with rural population greater than...</label>
+            <label for="ruralRange" class="form-label">Show commuting zones with rural population greater than...</label>
             <input type="range" class="form-range" min="0" max="100" value="0" step="5" id="ruralRange">
-            <div>
-              <p><span id="ruralRangeValue">0</span>%</p>
-            </div>
+            <p><span id="ruralRangeValue">0</span>%</p>
           </div>
 
           <div class="form-check mb-3">
             <input class="form-check-input" type="checkbox" id="showInst">
-            <label class="form-check-label" for="showInst">
-              Overlay institutions
-            </label>
+            <label class="form-check-label" for="showInst">Overlay institutions</label>
           </div>
 
           <div class="d-grid">
@@ -198,39 +172,43 @@
               </div>
             </div>
           </div>
+
           <div class="col-12">
             <div class="card shadow-sm rounded-0">
               <div class="card-body ticas-card">
                 <h5 class="card-title">Zone Demographics</h5>
                 <p class="card-text">Percent of residents by federal race/ethnicity reporting category (2020).</p>
-                <div style="height: 300px; position: relative;">
+                <div class="chart-canvas-wrapper">
                   <canvas id="raceDonutChart"></canvas>
                 </div>
               </div>
             </div>
           </div>
+
           <div class="col-12">
             <div class="card shadow-sm rounded-0">
               <div class="card-body ticas-card">
                 <h5 class="card-title">Educational Attainment</h5>
                 <p class="card-text">Percent of residents by highest level of education achieved. Excludes currently enrolled students.</p>
-                <div style="height: 300px; position: relative;">
+                <div class="chart-canvas-wrapper">
                   <canvas id="attainmentChart"></canvas>
                 </div>
               </div>
             </div>
           </div>
+
           <div class="col-12">
             <div class="card shadow-sm rounded-0">
               <div class="card-body ticas-card">
                 <h5 class="card-title">Income by Educational Attainment</h5>
                 <p class="card-text">Median income by highest level of education achieved.</p>
-                <div style="height: 300px; position: relative;">
+                <div class="chart-canvas-wrapper">
                   <canvas id="incomeBarChart"></canvas>
                 </div>
               </div>
             </div>
           </div>
+
           <div class="col-12">
             <div class="card shadow-sm rounded-0">
               <div class="card-body ticas-card">
@@ -239,6 +217,7 @@
               </div>
             </div>
           </div>
+
         </section>
 
         <section class="hidden" id="chartAreaWarning">
@@ -256,10 +235,9 @@
     <section class="container my-5">
       <div class="row">
         <div class="col">
-          <h2 class="mb-3 text-center text-md-start"><strong>Download the data</strong></h2>
+          <h2 class="mb-3 text-center text-md-start">Download the data</h2>
         </div>
       </div>
-
       <div class="row">
         <div class="col">
           <p class="lead">
@@ -269,7 +247,6 @@
           </p>
         </div>
       </div>
-
       <div class="row mt-4">
         <div class="col d-flex flex-wrap justify-content-center gap-3">
           <button type="button" class="btn btn-primary purple">Institution</button>
@@ -280,14 +257,11 @@
     </section>
 
     <section class="container my-5 info-section">
-      <!-- Section Header -->
       <div class="row">
         <div class="col">
-          <h2 class="mb-3 text-center text-md-start"><strong>About this project</strong></h2>
+          <h2 class="mb-3 text-center text-md-start">About this project</h2>
         </div>
       </div>
-
-      <!-- Section Body -->
       <div class="row">
         <div class="col">
           <p class="lead">
@@ -298,7 +272,6 @@
           </p>
         </div>
       </div>
-
     </section>
 
   </main>
@@ -307,10 +280,9 @@
   <footer class="bg-dark text-white py-3 mt-auto">
     <div class="container text-center">
       <a href="https://ticas.org/" class="text-white text-decoration-none">&copy; 2025 The Institute for College Access and Success</a>
-      <p>Contact <a href="https://andrewstevenhahn.com/#contact" style="color:white">Andrew Hahn</a> for issues accessing this content.</p>
+      <p>Contact <a href="https://andrewstevenhahn.com/#contact" class="text-white">Andrew Hahn</a> for issues accessing this content.</p>
     </div>
   </footer>
-
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

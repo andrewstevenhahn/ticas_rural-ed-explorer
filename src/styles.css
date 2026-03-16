@@ -86,6 +86,11 @@ body {
   margin-bottom: 10px;
 }
 
+.chart-canvas-wrapper {
+  height: 300px;
+  position: relative;
+}
+
 @media (max-width: 768px) {
   #map-wrapper {
     flex-direction: column;
