@@ -27,8 +27,11 @@ const chartPanel = document.getElementById("chart-panel")
 const mapControls = document.getElementById("map-controls")
 const logoImg = document.querySelector('.navbar-brand img');
 const czSearchInput = document.getElementById('czSearch');
+const returnToCZBtn = document.getElementById('return-to-cz-btn');
+const returnToCZContainer = document.getElementById('return-to-cz-container');
 
 let countyRuralChart = null;
+let selectedCZFeature = null;
 
 // set logo from asset
 logoImg.src = logo;
@@ -40,18 +43,32 @@ const map = new maplibregl.Map({
   center: [-98.5, 39.5], // centered on the US
   zoom: 3.5,
   cooperativeGestures: true,
-  attributionControl: false
+  attributionControl: false,
+  dragRotate: false,
+  touchPitch: false
 });
 
 map.addControl(new maplibregl.AttributionControl(), 'bottom-left');
 
 //TODO: style the basemap
-
+//TODO: update all the text in windows and in tooltips
+//TODO: style the charts
+//TODO: Implement a "feature of interest" mechanism to update the charts
+//TODO: Add options to download the data
 
 // handle events
 
 // initialization
 map.on("load", () => {
+
+  // basemap style overrides
+  map.setPaintProperty('background', 'background-color', '#fafafa');
+  map.setPaintProperty('water', 'fill-color', '#dadfe1');
+
+  // label zoom ranges
+  ['label_country_1', 'label_country_2', 'label_country_3', 'label_city_capital', 'label_city'].forEach(id => {
+    map.setLayerZoomRange(id, 5, 24);
+  });
 
   // add source data
 
@@ -79,13 +96,13 @@ map.on("load", () => {
     paint: {
       'fill-color': [
         'interpolate', ['linear'], ['get', 'pct_rural'],
-        0, '#ffffcc',
-        0.2, '#a1dab4',
-        0.4, '#41b6c4',
-        0.6, '#2c7fb8',
-        0.8, '#253494'
+        0, '#f6eff7',
+        0.2, '#bdc9e1',
+        0.4, '#67a9cf',
+        0.6, '#1c9099',
+        0.8, '#016c59'
       ],
-      'fill-opacity': 0.7
+      'fill-opacity': 0.9
     }
   });
 
@@ -97,13 +114,13 @@ map.on("load", () => {
     paint: {
       'fill-color': [
         'interpolate', ['linear'], ['get', 'pct_rural'],
-        0, '#ffffcc',
-        0.2, '#a1dab4',
-        0.4, '#41b6c4',
-        0.6, '#2c7fb8',
-        0.8, '#253494'
+        0, '#f6eff7',
+        0.2, '#bdc9e1',
+        0.4, '#67a9cf',
+        0.6, '#1c9099',
+        0.8, '#016c59'
       ],
-      'fill-opacity': 0.7
+      'fill-opacity': 0.9
     }
   })
 
@@ -150,11 +167,8 @@ map.on("load", () => {
   map.setLayoutProperty("county", 'visibility', 'none')
 });
 
-// Add zoom/rotation controls
-map.addControl(new maplibregl.NavigationControl());
-
-// Add fullscreen control
-map.addControl(new maplibregl.FullscreenControl(), "top-right");
+// Add zoom controls (compass hidden since rotation is disabled)
+map.addControl(new maplibregl.NavigationControl({ showCompass: false }));
 
 // Search box — fetch top Photon result on Enter
 let searchMarker = null;
@@ -186,7 +200,7 @@ async function performSearch() {
   const candidates = czBounds.filter(b => lng >= b.w && lng <= b.e && lat >= b.s && lat <= b.n);
   const czFeature = candidates.map(b => b.feature).find(f => geoContains(f, center));
   if (!czFeature) return;
-  selectCZ(czFeature, center);
+  selectCZ(czFeature);
 }
 
 czSearchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') performSearch(); });
@@ -280,7 +294,12 @@ map.on('mouseleave', 'county', () => {
 });
 
 // handle clicks
-function selectCZ(czFeature, center) {
+function selectCZ(czFeature) {
+  selectedCZFeature = czFeature;
+  returnToCZContainer.classList.add('hidden');
+  popRangeIn.disabled = true;
+  rurRangeIn.disabled = true;
+
   const selectedValue = czFeature.properties.CZ2020;
   map.setLayoutProperty('cz20', 'visibility', 'none');
   map.setLayoutProperty('county', 'visibility', 'visible');
@@ -290,7 +309,8 @@ function selectCZ(czFeature, center) {
     instLegend.classList.remove('hidden');
   }
   map.setFilter('county', ['==', ['get', 'CZ20'], selectedValue]);
-  map.flyTo({ center, essential: true, zoom: 8 });
+  const [[w, s], [e, n]] = geoBounds(czFeature);
+  map.fitBounds([[w, s], [e, n]], { padding: 40, essential: true });
 
   chartPanel.classList.remove("hidden");
   chartArea.classList.remove("hidden");
@@ -316,7 +336,7 @@ function selectCZ(czFeature, center) {
 
 map.on('click', 'cz20', (e) => {
   if (!e.features.length) return;
-  selectCZ(e.features[0], e.lngLat);
+  selectCZ(e.features[0]);
 });
 
 map.on('click', 'county', (e) => {
@@ -341,11 +361,37 @@ map.on('click', 'county', (e) => {
   updateRaceDonutChart(e.features[0]);
   updateIncomeBarChart(e.features[0]);
   updateAttainmentChart(e.features[0]);
+
+  returnToCZContainer.classList.remove('hidden');
+});
+
+// return to commuting zone button
+returnToCZBtn.addEventListener('click', () => {
+  if (!selectedCZFeature) return;
+  const selectedValue = selectedCZFeature.properties.CZ2020;
+  map.setFilter('county', ['==', ['get', 'CZ20'], selectedValue]);
+
+  const [[w, s], [e, n]] = geoBounds(selectedCZFeature);
+  map.fitBounds([[w, s], [e, n]], { padding: 40, essential: true });
+
+  const dataset = countyRuralChart.data.datasets[0];
+  dataset.backgroundColor = countyRuralChart.data.labels.map(() => 'rgba(54, 162, 235, 0.6)');
+  countyRuralChart.update();
+
+  updateRaceDonutChart(selectedCZFeature);
+  updateIncomeBarChart(selectedCZFeature);
+  updateAttainmentChart(selectedCZFeature);
+
+  returnToCZContainer.classList.add('hidden');
 });
 
 // reset button
 resetButton.addEventListener("click", function() {
   if (searchMarker) { searchMarker.remove(); searchMarker = null; czSearchInput.value = ''; }
+  selectedCZFeature = null;
+  returnToCZContainer.classList.add('hidden');
+  popRangeIn.disabled = false;
+  rurRangeIn.disabled = false;
   map.setLayoutProperty('cz20', 'visibility', 'visible')
   map.setLayoutProperty('county', 'visibility', 'none')
   map.setLayoutProperty("institution", 'visibility', 'none')
