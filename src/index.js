@@ -1,9 +1,8 @@
 //TODO: Implement a "feature of interest" mechanism to update the charts
-//TODO: Edit warning card
-//TODO: Filter institutions for county view
+
+//TODO: Add institution points
 //TODO: Accessibility check
 //TODO: Mobile check
-//TODO: Remove institution legend from county view. 
 
 // import assets, libraries and custom styles
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -26,8 +25,6 @@ const rurRangeVal = document.getElementById('ruralRangeValue');
 const popRangeVal = document.getElementById('populationRangeValue');
 const resetButton = document.getElementById("reset-button");
 const tiles = document.getElementsByClassName("chart-tile");
-const instCheck = document.getElementById("showInst")
-const instLegend = document.getElementById("inst-legend")
 const chartArea = document.getElementById("chartArea")
 
 const chartPanel = document.getElementById("chart-panel")
@@ -45,6 +42,7 @@ const downloadRegionName = document.getElementById('download-region-name');
 
 let countyRuralChart = null;
 let selectedCZFeature = null;
+let instAllFeatures = null; // lazily populated on first selection
 
 // set logo from asset
 logoImg.src = logo;
@@ -132,46 +130,7 @@ map.on("load", () => {
     }
   })
 
-  // render institutions
-  map.addLayer({
-    id:"institution",
-    type: "circle",
-    source: "institution",
-    paint: {
-      "circle-stroke-width": 1,
-      "circle-stroke-color": "#fff",
-      "circle-color": [
-      'match', ['get', 'level'],
-      'Public', '#fa634b',
-      'Private non-profit', 'rgb(52, 66, 115)',
-      '#999999' // default
-    ],
-      "circle-radius": 4
-    }
-  });
-
-  // render inst labels 
-    map.addLayer({
-    id:"institution_labels",
-    type: "symbol",
-    source: "institution",
-    layout: {
-      'text-field': ['get', 'institution'],
-      'text-size': 12,
-      'text-offset': [0,1.2],
-      'text-anchor': 'top',
-      'text-allow-overlap': false
-    },
-    paint: {
-      'text-color': '#000',
-      'text-halo-color': '#fff',
-      'text-halo-width': 2
-    }
-  });
-
   // hide supplemental layers until toggled
-  map.setLayoutProperty("institution", 'visibility', 'none');
-  map.setLayoutProperty("institution_labels", 'visibility', 'none');
   map.setLayoutProperty("county", 'visibility', 'none')
 });
 
@@ -227,31 +186,6 @@ const popup = new maplibregl.Popup({
 });
 
 // handle mouse movement
-map.on('mousemove', 'institution', (e) => {
-  if (!e.features || e.features.length === 0) return;
-  const feature = e.features[0];
-  popup.remove();
-  map.getCanvas().style.cursor = 'pointer';
-
-  const instname = feature.properties.institution;
-  const inststate = feature.properties.state;
-  const instlevel = feature.properties.level;
-  const instsector = feature.properties.sector;
-
-  const instTooltip =
-    `<div class="map-tooltip">` +
-    `<strong>${instname} (${inststate})</strong>` +
-    `<p>${instsector} ${instlevel}</p>` +
-    `</div>`;
-
-  popup.setLngLat(e.lngLat).setHTML(instTooltip).addTo(map);
-});
-
-map.on('mouseleave', 'institution', () => {
-  map.getCanvas().style.cursor = '';
-  popup.remove();
-});
-
 map.on('mousemove', 'cz20', (e) => {
   if (!e.features || e.features.length === 0) return;
   const feature = e.features[0];
@@ -311,15 +245,17 @@ function selectCZ(czFeature) {
   rurRangeIn.disabled = true;
 
   const selectedValue = czFeature.properties.CZ2020;
+
+  if (!instAllFeatures) {
+    const instSrc = map.getSource("institution");
+    if (instSrc && instSrc._data) instAllFeatures = instSrc._data.features.slice();
+  }
+
   map.setLayoutProperty('cz20', 'visibility', 'none');
   map.setLayoutProperty('county', 'visibility', 'visible');
-  if (instCheck.checked) {
-    map.setLayoutProperty("institution", 'visibility', 'visible');
-    map.setLayoutProperty("institution_labels", 'visibility', 'visible');
-    instLegend.classList.remove('hidden');
-  }
   map.setFilter('county', ['==', ['get', 'CZ20'], selectedValue]);
-  setInstitutionFilter(['==', ['get', 'j_CZ20'], selectedValue]);
+
+  const czInstitutions = instAllFeatures ? instAllFeatures.filter(f => f.properties.j_CZ20 === selectedValue) : [];
   const [[w, s], [e, n]] = geoBounds(czFeature);
   map.fitBounds([[w, s], [e, n]], { padding: 40, essential: true });
 
@@ -329,7 +265,6 @@ function selectCZ(czFeature) {
   updateCZTitleCard(czFeature);
 
   const countySource = map.getSource("county");
-  const instSource = map.getSource("institution");
   if (countySource && countySource._data) {
     const counties = countySource._data.features.filter(f => f.properties.CZ20 == selectedValue);
     const labels = counties.map(f => f.properties.county_name);
@@ -337,10 +272,7 @@ function selectCZ(czFeature) {
     document.getElementById("cz-title").textContent = czFeature.properties.CZName;
     countyRuralChart = updateBarChart(labels, values, "countyChart", countyRuralChart);
   }
-  if (instSource && instSource._data) {
-    const institutions = instSource._data.features.filter(f => f.properties.j_CZ20 === selectedValue);
-    renderInstitutionTable(institutions);
-  }
+  renderInstitutionTable(czInstitutions);
   updateRaceDonutChart(czFeature);
   updateIncomeBarChart(czFeature);
   updateAttainmentChart(czFeature);
@@ -353,11 +285,10 @@ map.on('click', 'cz20', (e) => {
 
 function selectCounty(countyFeature) {
   const selectedValue = countyFeature.properties.GEOID;
-  map.setLayoutProperty("institution_labels", 'visibility', 'visible');
-  map.setLayoutProperty("institution", 'visibility', 'visible');
-  instLegend.classList.remove('hidden');
   map.setFilter('county', ['==', ['get', 'GEOID'], selectedValue]);
-  setInstitutionFilter(['==', ['get', 'GEOID'], selectedValue]);
+
+  const countyInstitutions = instAllFeatures ? instAllFeatures.filter(f => f.properties.GEOID === selectedValue) : [];
+
   const [[cw, cs], [ce, cn]] = geoBounds(countyFeature);
   map.fitBounds([[cw, cs], [ce, cn]], { padding: 40, essential: true });
   for (let i = 0; i < tiles.length; i++) {
@@ -368,6 +299,7 @@ function selectCounty(countyFeature) {
   updateRaceDonutChart(countyFeature);
   updateIncomeBarChart(countyFeature);
   updateAttainmentChart(countyFeature);
+  renderInstitutionTable(countyInstitutions);
   returnToCZContainer.classList.remove('hidden');
 }
 
@@ -382,7 +314,8 @@ returnToCZBtn.addEventListener('click', () => {
   if (!selectedCZFeature) return;
   const selectedValue = selectedCZFeature.properties.CZ2020;
   map.setFilter('county', ['==', ['get', 'CZ20'], selectedValue]);
-  setInstitutionFilter(['==', ['get', 'j_CZ20'], selectedValue]);
+
+  const czInstitutions = instAllFeatures ? instAllFeatures.filter(f => f.properties.j_CZ20 === selectedValue) : [];
 
   const [[w, s], [e, n]] = geoBounds(selectedCZFeature);
   map.fitBounds([[w, s], [e, n]], { padding: 40, essential: true });
@@ -395,6 +328,7 @@ returnToCZBtn.addEventListener('click', () => {
   updateRaceDonutChart(selectedCZFeature);
   updateIncomeBarChart(selectedCZFeature);
   updateAttainmentChart(selectedCZFeature);
+  renderInstitutionTable(czInstitutions);
 
   returnToCZContainer.classList.add('hidden');
 });
@@ -409,10 +343,6 @@ resetButton.addEventListener("click", function() {
   rurRangeIn.disabled = false;
   map.setLayoutProperty('cz20', 'visibility', 'visible')
   map.setLayoutProperty('county', 'visibility', 'none')
-  map.setLayoutProperty("institution", 'visibility', 'none')
-  map.setLayoutProperty("institution_labels", 'visibility', 'none');
-  setInstitutionFilter(null);
-  instLegend.classList.add('hidden')
   mapControls.classList.remove('show')
   mapControlsWrapper.classList.remove('hidden')
   map.flyTo({
@@ -432,8 +362,6 @@ resetButton.addEventListener("click", function() {
 
   map.setFilter('cz20', null)
 
-  instCheck.value = instCheck.defaultValue
-  instCheck.checked = false;
   });
 
 function applyFilters() {
@@ -442,17 +370,6 @@ function applyFilters() {
     ["<=", ["get", "pop2024"], sliderToPop(popRangeIn.value)],
     [">=", ["get", "pct_rural"], Number(rurRangeIn.value) / 100]
   ]);
-  if (instCheck.checked) {
-    map.setLayoutProperty("institution", 'visibility', 'visible');
-    instLegend.classList.remove('hidden');
-    if (map.getZoom() > 5) {
-      map.setLayoutProperty("institution_labels", 'visibility', 'visible');
-    }
-  } else {
-    map.setLayoutProperty("institution", 'visibility', 'none');
-    map.setLayoutProperty("institution_labels", 'visibility', 'none');
-    instLegend.classList.add('hidden');
-  }
 }
 
 // show instructions once everything is loaded
@@ -477,14 +394,7 @@ rurRangeIn.addEventListener('input', () => {
   applyFilters();
 });
 
-instCheck.addEventListener('change', () => {
-  applyFilters();
-});
 
-function setInstitutionFilter(filterExpr) {
-  map.setFilter('institution', filterExpr);
-  map.setFilter('institution_labels', filterExpr);
-}
 
 // ── Title card helpers ────────────────────────────────────────────────────────
 
