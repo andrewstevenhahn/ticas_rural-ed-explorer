@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- TODO: Check accessibility -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -95,6 +94,7 @@
           </div>
         </div>
 
+        <div id="map-controls-wrapper">
         <!-- Toggle button (mobile only) -->
         <button id="controls-toggle"
                 class="btn btn-primary position-absolute top-0 start-0 m-3 d-md-none orange-bg"
@@ -145,10 +145,8 @@
             <label class="form-check-label" for="showInst">Overlay institutions</label>
           </div>
 
-          <div class="d-grid">
-            <button class="btn btn-sm orange-bg text-white" id="reset-button">Reset Map</button>
-          </div>
         </div>
+        </div><!-- end #map-controls-wrapper -->
       </div><!-- end #map-container -->
 
       <!-- Chart side panel (hidden until a region is selected) -->
@@ -164,8 +162,15 @@
                 <ul class="list-unstyled mb-0" id="region-meta">
                   <!-- e.g. population, rural %, state, etc. -->
                 </ul>
-                <div class="mt-3 hidden text-center" id="return-to-cz-container">
-                  <button class="btn btn-sm orange-bg text-white" id="return-to-cz-btn">Return to Commuting Zone</button>
+                <div class="mt-3 hidden" id="title-card-actions">
+                  <div class="d-flex gap-2 justify-content-center flex-wrap">
+                    <div id="return-to-cz-container" class="hidden">
+                      <button class="btn btn-sm orange-bg text-white" id="return-to-cz-btn">Return to Commuting Zone</button>
+                    </div>
+                    <div id="reset-cz-container">
+                      <button class="btn btn-sm orange-bg text-white" id="reset-button">Reset Map</button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -175,10 +180,10 @@
             <div class="card shadow-sm rounded-0">
               <div class="card-body ticas-card">
                 <h5 id="cz-title">Tile 1</h5>
-                <p>This commuting zone includes the counties below. The figures in this section include the populations of
-                  all of these counties together.
-                </p>
-                <canvas id="countyChart"></canvas>
+                <p>The counties listed below share a commuting zone. Click on a bar to see statistics for that county.</p>
+                <div class="chart-canvas-wrapper" id="countyChartWrapper">
+                  <canvas id="countyChart"></canvas>
+                </div>
               </div>
             </div>
           </div>
@@ -242,14 +247,7 @@
 
         </section>
 
-        <section class="hidden" id="chartAreaWarning">
-          <div class="card shadow-sm rounded-0">
-            <div class="card-body text-center">
-              <h5 class="card-title">Alert</h5>
-              <p class="card-text">Granular data views for counties are still under development.</p>
-            </div>
-          </div>
-        </section>
+
       </div><!-- end #chart-panel -->
 
     </div><!-- end #map-wrapper -->

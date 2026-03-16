@@ -21,14 +21,16 @@ An interactive map tool for exploring rural education data across U.S. commuting
 - Filter commuting zones by population and rural percentage
 - Search by city or county name to locate a zone
 - Click a commuting zone to view:
-  - County-level rural breakdown
+  - Name, population, % rural, states covered, and commuting containment metric
+  - County-level rural breakdown (click a bar to drill into that county)
   - Race/ethnicity demographics
   - Educational attainment
   - Median income by education level
   - Local institutions (public and private non-profit)
-- Click a county within a commuting zone to drill down to county-level data
-- "Return to Commuting Zone" button to navigate back up from county view
-- Overlay of higher education institutions
+- Click a county on the map or in the chart to drill down to county-level data
+- "Return to Commuting Zone" and "Reset Map" buttons in the data panel for navigation
+- Overlay of higher education institutions (scoped to the selected zone or county)
+- Map controls panel hides when a region is selected to maximize map space
 - Data download (coming soon)
 
 ---
@@ -122,12 +124,10 @@ dist/               # Production build output (generated)
 ## Known Limitations / Roadmap
 
 - [ ] Data download buttons not yet wired up
-<!--
-  What's not done yet? What's intentionally out of scope for now?
-  e.g.:
-  - [ ] County-level chart view still under development
-  - [ ] Accessibility audit pending
--->
+- [ ] Institution overlay behavior under investigation (known bug)
+- [ ] Institution data and filtering logic needs review across all states
+- [ ] "Feature of interest" mechanism — planned, requirements TBD
+- [ ] Accessibility audit pending
 
 ---
 
