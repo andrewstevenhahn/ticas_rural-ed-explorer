@@ -11,9 +11,9 @@ import countyData from "./data/corrected_county_num.geojson";
 import czData from "./data/corrected_county_num_3.geojson";
 import instData from "./data/institution_j.geojson";
 
-// set logo from asset
-const logoImg = document.querySelector('.navbar-brand img');
-logoImg.src = logo;
+// import countyData from "./data/county.geojson";
+// import czData from "./data/cz.geojson";
+// import instData from "./data/inst.geojson";
 
 // define DOM elements
 const popRangeIn = document.getElementById('populationRange');
@@ -27,41 +27,59 @@ const instCheck = document.getElementById("showInst")
 const instLegend = document.getElementById("inst-legend")
 const chartArea = document.getElementById("chartArea")
 const chartAreaWarning = document.getElementById("chartAreaWarning")
+const chartPanel = document.getElementById("chart-panel")
 const mapControls = document.getElementById("map-controls")
+const logoImg = document.querySelector('.navbar-brand img');
 
-// initialize chart objects
 let countyRuralChart = null;
 
+// set logo from asset
+logoImg.src = logo;
+
 // Initalize map with open source tiles 
+// const map = new maplibregl.Map({
+//   container: "map",
+//   style: {
+//     version: 8,
+//     sources: {
+//       "osm-tiles": {
+//         type: "raster",
+//         tiles: [
+//           "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+//         ],
+//         tileSize: 256,
+//         attribution: "© OpenStreetMap contributors"
+//       }
+//     },
+//     layers: [
+//       {
+//         id: "osm-tiles",
+//         type: "raster",
+//         source: "osm-tiles",
+//         minzoom: 0,
+//         maxzoom: 19
+//       }
+//     ],
+//     glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf"
+//   },
+//   center: [-95.5795, 39.8283],
+//   zoom: 3,
+//   cooperativeGestures: true
+// });
+
 const map = new maplibregl.Map({
-  container: "map",
-  style: {
-    version: 8,
-    sources: {
-      "osm-tiles": {
-        type: "raster",
-        tiles: [
-          "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        ],
-        tileSize: 256,
-        attribution: "© OpenStreetMap contributors"
-      }
-    },
-    layers: [
-      {
-        id: "osm-tiles",
-        type: "raster",
-        source: "osm-tiles",
-        minzoom: 0,
-        maxzoom: 19
-      }
-    ],
-    glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf"
-  },
-  center: [-95.5795, 39.8283],
-  zoom: 3,
-  cooperativeGestures: true
+  container: 'map',
+  style: 'https://tiles.openfreemap.org/styles/positron',
+  center: [-98.5, 39.5], // centered on the US
+  zoom: 3.5,
+  cooperativeGestures: true,
+  attributionControl: false
 });
+
+map.addControl(new maplibregl.AttributionControl(), 'bottom-left');
+
+//TODO: style the basemap
+
 
 // handle events
 
@@ -86,6 +104,7 @@ map.on("load", () => {
   });
 
   // render commuting zones
+  //TODO: change the colors to work with the basemap
   map.addLayer({
     id: "cz20",
     type: "fill",
@@ -120,8 +139,6 @@ map.on("load", () => {
       'fill-opacity': 0.7
     }
   })
-
-  map.setLayoutProperty("county", 'visibility', 'none')
 
   // render institutions
   map.addLayer({
@@ -160,8 +177,10 @@ map.on("load", () => {
     }
   });
 
+  // hide supplemental layers until toggled
   map.setLayoutProperty("institution", 'visibility', 'none');
   map.setLayoutProperty("institution_labels", 'visibility', 'none');
+  map.setLayoutProperty("county", 'visibility', 'none')
 });
 
 // Add zoom/rotation controls
@@ -183,6 +202,7 @@ const popup = new maplibregl.Popup({
 
 // handle mouse movement
 let currentFeatureId = undefined;
+
 map.on('mousemove', 'institution', (e) => {
   if (!e.features || e.features.length === 0) return;
   const feature = e.features[0];
@@ -309,6 +329,7 @@ map.on('click', 'cz20', (e) => {
     zoom: 8
   });
   
+  chartPanel.classList.remove("hidden")
   chartArea.classList.remove("hidden")
   chartAreaWarning.classList.add("hidden")
 
@@ -337,7 +358,6 @@ map.on('click', 'cz20', (e) => {
   updateIncomeBarChart(e.features[0])
   updateAttainmentChart(e.features[0])
 
-  chartArea.scrollIntoView({behavior: 'smooth'})
 });
 
 map.on('click', 'county', (e) => {
@@ -357,7 +377,7 @@ map.on('click', 'county', (e) => {
     tiles[i].classList.remove("hidden")
   }
 
-  chartArea.scrollIntoView({behavior: 'smooth'})
+  // chartArea.scrollIntoView({behavior: 'smooth'})
 
   // update tile 1
   highlightBar(countyRuralChart, e.features[0].properties.county_name)
@@ -383,6 +403,7 @@ resetButton.addEventListener("click", function() {
     essential: true
   });
 
+  chartPanel.classList.add("hidden")
   chartArea.classList.add("hidden")
   chartAreaWarning.classList.add('hidden')
 

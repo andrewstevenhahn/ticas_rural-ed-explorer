@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- TODO: Check accessibility -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -46,9 +47,9 @@
             <a href="https://www.mdrc.org/">MDRC</a>.
           </p>
           <p>
-            To use the map, use the control panel on the right to make adjustments to the map. Click on a commuting zone to view county-level
-            data. Clicking on a commuter zone or county displays demographic and education data below the map. On mobile, click the button in the top right
-            corner to display the control panel. 
+            To use the map, use the control panel on the left to make adjustments to the map. Click on a commuting zone to view
+            demographic and education data in the panel to the right. On mobile, click the button in the top left corner to display
+            the control panel.
           </p>
           <p>
             Use the links in the navigation bar above to learn more about TICAS and the rural reconnect initiative.
@@ -65,185 +66,192 @@
   </div>
 
   <main class="flex-grow-1 container-fluid wrapper">
-    <div id="spinner" class="flex-grow-1"></div>
-    <div id="map"></div>
 
-    <div id="map-legend" class="position-absolute bottom-0 start-0 m-4 p-3 bg-white shadow rounded">
-      <h8 class="mb-2">Rural Population</h8>
-      <div class="d-flex align-items-center">
-        <span class="legend-color" style="background:#ffffcc;"></span><small class="ms-2">0-20%</small>
-      </div>
-      <div class="d-flex align-items-center">
-        <span class="legend-color" style="background:#a1dab4;"></span><small class="ms-2">20-40%</small>
-      </div>
-      <div class="d-flex align-items-center">
-        <span class="legend-color" style="background:#41b6c4;"></span><small class="ms-2">40-60%</small>
-      </div>
-      <div class="d-flex align-items-center">
-        <span class="legend-color" style="background:#2c7fb8;"></span><small class="ms-2">60-80%</small>
-      </div>
-      <div class="d-flex align-items-center">
-        <span class="legend-color" style="background:#253494;"></span><small class="ms-2">80%+</small>
-      </div>
-      <div id="inst-legend" class="hidden">
-        <h8 class="mb-2">Institutions</h8>
-        <div class="d-flex align-items-center">
-          <span class="inst-legend-color" style="background:#fa634b;"></span><small class="ms-1">Public</small>
-        </div>
-        <div class="d-flex align-items-center">
-          <span class="inst-legend-color" style="background:rgb(52, 66, 115);"></span><small class="ms-1">Private non-profit</small>
-        </div>
-      </div>
-    </div>
+    <!-- Map + chart side panel -->
+    <div id="map-wrapper">
 
-    <!-- Toggle button (only shows on small screens) -->
-    <button id="controls-toggle"
-            class="btn btn-primary position-absolute top-0 start-0 m-3 d-md-none orange-bg" 
-            type="button" 
-            data-bs-toggle="collapse" 
-            data-bs-target="#map-controls" 
-            aria-expanded="false" 
-            aria-controls="map-controls">
-      Map Controls
-    </button>
+      <div id="map-container">
+        <div id="spinner" class="flex-grow-1"></div>
+        <div id="map"></div>
 
-    <!-- Control panel -->
-    <div id="map-controls" class="collapse d-md-block position-absolute top-0 start-0 m-3 p-3 bg-white shadow rounded">
-      <h6 class="mb-2">Filter Commuting Zones</h6>
-
-      <button type="button" 
-          class="btn-close position-absolute top-0 end-0 m-2 d-md-none" 
-          data-bs-toggle="collapse" 
-          data-bs-target="#map-controls" 
-          aria-label="Close"></button>
-
-      <!-- Dropdown -->
-      <!-- <div class="mb-3">
-        <label for="regionSelect" class="form-label">Choose crosstab metric</label>
-        <select id="regionSelect" class="form-select form-select-sm">
-          <option value="all">By Age Range</option>
-          <option value="west">By Race/ethnicity</option>
-          <option value="west">By educational attainment</option>
-        </select>
-      </div> -->
-
-      <!-- <div class="mb-3">
-        <label for="regionSelect" class="form-label">Show institutions</label>
-        <select id="regionSelect" class="form-select form-select-sm">
-          <option value="all">All Institutions</option>
-          <option value="west">Public</option>
-          <option value="west">Private Nonprofit</option>
-          <option value="west">Four-year</option>
-          <option value="west">Two-year</option>
-        </select>
-      </div> -->
-
-      <div class="mb-3">
-        <label for="opacityRange" class="form-label">Show commuting zones with population less than...</label>
-        <input type="range" class="form-range" min="0" max="46000000" value="46000000" step="100000" id="populationRange">
-        <div>
-          <p><span id="populationRangeValue">46,000,000</span></p>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <label for="opacityRange" class="form-label">Show commuting zones with rural population greater than...</label>
-        <input type="range" class="form-range" min="0" max="100" value="0" step="5" id="ruralRange">
-        <div>
-          <p><span id="ruralRangeValue">0</span>%</p>
-        </div>
-      </div>
-
-      <div class="form-check mb-3">
-        <input class="form-check-input" type="checkbox" id="showInst">
-        <label class="form-check-label" for="showInst">
-          Overlay institutions
-        </label>
-      </div>
-
-      <div class="d-grid">
-        <button id="applyChanges" class="btn btn-success btn-sm orange-bg">Apply Changes</button>
-      </div>
-            <div class="d-grid">
-        <button class="btn btn-success btn-sm light-bg" id="reset-button">Reset Map</button>
-      </div>
-    </div>
-
-    <section class="container my-5 hidden" id="chartArea">
-      <div class="row g-4">
-        <!-- First four tiles -->
-        <div class="col-lg-6 col-md-6 col-12">
-          <div class="card h-100 shadow-sm rounded-0">
-            <div class="card-body ticas-card">
-              <h5 id="cz-title">Tile 1</h5>
-              <p>This commuting zone includes the counties below. The figures in this section include the populations of 
-                all of these counties together.
-              </p>
-              <canvas id="countyChart"></canvas>
+        <div id="map-legend" class="position-absolute bottom-0 end-0 m-4 p-3 bg-white shadow rounded">
+          <h8 class="mb-2">Rural Population</h8>
+          <div class="d-flex align-items-center">
+            <span class="legend-color" style="background:#ffffcc;"></span><small class="ms-2">0-20%</small>
+          </div>
+          <div class="d-flex align-items-center">
+            <span class="legend-color" style="background:#a1dab4;"></span><small class="ms-2">20-40%</small>
+          </div>
+          <div class="d-flex align-items-center">
+            <span class="legend-color" style="background:#41b6c4;"></span><small class="ms-2">40-60%</small>
+          </div>
+          <div class="d-flex align-items-center">
+            <span class="legend-color" style="background:#2c7fb8;"></span><small class="ms-2">60-80%</small>
+          </div>
+          <div class="d-flex align-items-center">
+            <span class="legend-color" style="background:#253494;"></span><small class="ms-2">80%+</small>
+          </div>
+          <div id="inst-legend" class="hidden">
+            <h8 class="mb-2">Institutions</h8>
+            <div class="d-flex align-items-center">
+              <span class="inst-legend-color" style="background:#fa634b;"></span><small class="ms-1">Public</small>
+            </div>
+            <div class="d-flex align-items-center">
+              <span class="inst-legend-color" style="background:rgb(52, 66, 115);"></span><small class="ms-1">Private non-profit</small>
             </div>
           </div>
         </div>
-        <div class="col-lg-6 col-md-6 col-12">
-          <div class="card h-100 shadow-sm rounded-0">
-            <div class="card-body ticas-card">
-              <h5 class="card-title">Zone Demographics</h5>
-              <p class="card-text">Percent of residents by federal race/ethnicity reporting category (2020).</p>
-              <div style="height: 350px; width: 100%;">
-              <canvas id="raceDonutChart"></canvas>
+
+        <!-- Toggle button (only shows on small screens) -->
+        <button id="controls-toggle"
+                class="btn btn-primary position-absolute top-0 start-0 m-3 d-md-none orange-bg"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#map-controls"
+                aria-expanded="false"
+                aria-controls="map-controls">
+          Map Controls
+        </button>
+
+        <!-- Control panel -->
+        <div id="map-controls" class="collapse d-md-block position-absolute top-0 start-0 m-3 p-3 bg-white shadow rounded">
+          <h6 class="mb-2">Filter Commuting Zones</h6>
+
+          <button type="button"
+              class="btn-close position-absolute top-0 end-0 m-2 d-md-none"
+              data-bs-toggle="collapse"
+              data-bs-target="#map-controls"
+              aria-label="Close"></button>
+
+          <!-- Dropdown -->
+          <!-- <div class="mb-3">
+            <label for="regionSelect" class="form-label">Choose crosstab metric</label>
+            <select id="regionSelect" class="form-select form-select-sm">
+              <option value="all">By Age Range</option>
+              <option value="west">By Race/ethnicity</option>
+              <option value="west">By educational attainment</option>
+            </select>
+          </div> -->
+
+          <div class="mb-3">
+            <label for="czSearch" class="form-label">Search by city or county</label>
+            <input type="text" class="form-control form-control-sm" id="czSearch" placeholder="e.g. Laredo, TX">
+          </div>
+
+          <div class="mb-3">
+            <label for="opacityRange" class="form-label">Show commuting zones with population less than...</label>
+            <input type="range" class="form-range" min="0" max="46000000" value="46000000" step="100000" id="populationRange">
+            <div>
+              <p><span id="populationRangeValue">46,000,000</span></p>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="opacityRange" class="form-label">Show commuting zones with rural population greater than...</label>
+            <input type="range" class="form-range" min="0" max="100" value="0" step="5" id="ruralRange">
+            <div>
+              <p><span id="ruralRangeValue">0</span>%</p>
+            </div>
+          </div>
+
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="showInst">
+            <label class="form-check-label" for="showInst">
+              Overlay institutions
+            </label>
+          </div>
+
+          <div class="d-grid">
+            <button id="applyChanges" class="btn btn-success btn-sm orange-bg">Apply Changes</button>
+          </div>
+          <div class="d-grid">
+            <button class="btn btn-success btn-sm light-bg" id="reset-button">Reset Map</button>
+          </div>
+        </div>
+      </div><!-- end #map-container -->
+
+      <!-- Chart side panel (hidden until a region is selected) -->
+      <div id="chart-panel" class="hidden">
+        <section class="hidden" id="chartArea">
+
+          <!-- Title / metadata tile -->
+          <div class="col-12">
+            <div class="card shadow-sm rounded-0">
+              <div class="card-body ticas-card">
+                <h5 id="region-title">Region Name</h5>
+                <p id="region-type"></p>
+                <ul class="list-unstyled mb-0" id="region-meta">
+                  <!-- e.g. population, rural %, state, etc. -->
+                </ul>
               </div>
             </div>
           </div>
-        </div>
-        <div class="col-lg-6 col-md-6 col-12">
-          <div class="card h-100 shadow-sm rounded-0">
-            <div class="card-body ticas-card">
-              <h5 class="card-title">Educational Attainment</h5>
-              <p class="card-text">Percent of residents by highest level of education achieved. Excludes currently enrolled students.</p>
-              <div style="height: 350px; width: 100%;">
-                <canvas id="attainmentChart"></canvas>
+
+          <div class="col-12">
+            <div class="card shadow-sm rounded-0">
+              <div class="card-body ticas-card">
+                <h5 id="cz-title">Tile 1</h5>
+                <p>This commuting zone includes the counties below. The figures in this section include the populations of
+                  all of these counties together.
+                </p>
+                <canvas id="countyChart"></canvas>
               </div>
             </div>
           </div>
-        </div>
-        <div class="col-lg-6 col-md-6 col-12">
-          <div class="card h-100 shadow-sm rounded-0">
-            <div class="card-body ticas-card">
-              <h5 class="card-title">Income by Educational Attainment</h5>
-              <p class="card-text">Median income by highest level of education achieved.</p>
-              <div style="height: 350px; width: 100%;">
-                <canvas id="incomeBarChart"></canvas>
+          <div class="col-12">
+            <div class="card shadow-sm rounded-0">
+              <div class="card-body ticas-card">
+                <h5 class="card-title">Zone Demographics</h5>
+                <p class="card-text">Percent of residents by federal race/ethnicity reporting category (2020).</p>
+                <div style="height: 300px; position: relative;">
+                  <canvas id="raceDonutChart"></canvas>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Fifth tile on its own row -->
-      <div class="row g-4 mt-3">
-        <div class="col-12">
-          <div class="card h-100 shadow-sm rounded-0">
-            <div class="card-body text-center ticas-card">
-              <h5 class="card-title">Local Institutions</h5>
-              <div id="institutionTableContainer"></div>
+          <div class="col-12">
+            <div class="card shadow-sm rounded-0">
+              <div class="card-body ticas-card">
+                <h5 class="card-title">Educational Attainment</h5>
+                <p class="card-text">Percent of residents by highest level of education achieved. Excludes currently enrolled students.</p>
+                <div style="height: 300px; position: relative;">
+                  <canvas id="attainmentChart"></canvas>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-    </section>
+          <div class="col-12">
+            <div class="card shadow-sm rounded-0">
+              <div class="card-body ticas-card">
+                <h5 class="card-title">Income by Educational Attainment</h5>
+                <p class="card-text">Median income by highest level of education achieved.</p>
+                <div style="height: 300px; position: relative;">
+                  <canvas id="incomeBarChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="card shadow-sm rounded-0">
+              <div class="card-body ticas-card">
+                <h5 class="card-title">Local Institutions</h5>
+                <div id="institutionTableContainer"></div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-    <section class="container my-5 hidden" id="chartAreaWarning">
-      <div class="row g-4 mt-3">
-        <div class="col-12">
-          <div class="card h-100 shadow-sm rounded-0">
+        <section class="hidden" id="chartAreaWarning">
+          <div class="card shadow-sm rounded-0">
             <div class="card-body text-center">
               <h5 class="card-title">Alert</h5>
               <p class="card-text">Granular data views for counties are still under development.</p>
             </div>
           </div>
-        </div>
-      </div>
-    </section>
+        </section>
+      </div><!-- end #chart-panel -->
 
+    </div><!-- end #map-wrapper -->
 
     <section class="container my-5">
       <div class="row">
@@ -255,8 +263,8 @@
       <div class="row">
         <div class="col">
           <p class="lead">
-            Use the buttons below to download the data for the above map. Data can be downloaded at the level of U.S. county, 
-            commuting zone, and public or private non-profit institution. More information about commuting zones can be found 
+            Use the buttons below to download the data for the above map. Data can be downloaded at the level of U.S. county,
+            commuting zone, and public or private non-profit institution. More information about commuting zones can be found
             <a href="https://usa.ipums.org/usa-action/variables/COMZONE#description_section">on the IPUMS website</a>.
           </p>
         </div>
@@ -286,7 +294,7 @@
             The <a href="https://ticas.org/our-work/college-completion-2/rural-reconnect-initiative/">Rural Reconnect Initiative</a> is a partnership led
             by <a href="https://ticas.org/">The Institute for College Access and Success (TICAS)</a> in partnership with <a href="https://www.mdrc.org/">
             MDRC</a>. In collaboration with institutions, the initative aims to advance college completion and economic mobility for Black and Latino students
-            in rural communities across the South and Southwest. 
+            in rural communities across the South and Southwest.
           </p>
         </div>
       </div>
