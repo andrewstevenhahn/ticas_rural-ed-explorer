@@ -177,10 +177,21 @@
           <div class="col-12">
             <div class="card shadow-sm rounded-0">
               <div class="card-body ticas-card">
-                <h5 class="card-title">Zone Demographics</h5>
-                <p class="card-text">Percent of residents by federal race/ethnicity reporting category (2020).</p>
-                <div class="chart-canvas-wrapper">
-                  <canvas id="raceDonutChart"></canvas>
+                <h5 class="card-title">Focus on a Group</h5>
+                <p class="card-text">Optionally filter the charts below to a specific age or racial/ethnic group.</p>
+                <div class="mb-2">
+                  <label for="foi-metric" class="form-label">Metric</label>
+                  <select class="form-select form-select-sm" id="foi-metric">
+                    <option value="none">None (show overall)</option>
+                    <option value="age">Age group</option>
+                    <option value="race">Race / Ethnicity</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="foi-category" class="form-label">Category</label>
+                  <select class="form-select form-select-sm" id="foi-category" disabled>
+                    <option value="">— select a metric first —</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -189,7 +200,20 @@
           <div class="col-12">
             <div class="card shadow-sm rounded-0">
               <div class="card-body ticas-card">
-                <h5 class="card-title">Educational Attainment</h5>
+                <h5 class="card-title">Zone Demographics</h5>
+                <p class="card-text">Percent of residents by federal race/ethnicity reporting category (2020).</p>
+                <div class="chart-canvas-wrapper">
+                  <canvas id="raceDonutChart"></canvas>
+                </div>
+                <p id="race-age-note" class="text-muted small mt-2 hidden">Note: Racial composition is shown for all ages.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="card shadow-sm rounded-0">
+              <div class="card-body ticas-card">
+                <h5 class="card-title" id="attainment-chart-title">Educational Attainment</h5>
                 <p class="card-text">Percent of residents by highest level of education achieved. Excludes currently enrolled students.</p>
                 <div class="chart-canvas-wrapper">
                   <canvas id="attainmentChart"></canvas>
@@ -201,11 +225,12 @@
           <div class="col-12">
             <div class="card shadow-sm rounded-0">
               <div class="card-body ticas-card">
-                <h5 class="card-title">Income by Educational Attainment</h5>
+                <h5 class="card-title" id="income-chart-title">Income by Educational Attainment</h5>
                 <p class="card-text">Median income by highest level of education achieved.</p>
                 <div class="chart-canvas-wrapper">
                   <canvas id="incomeBarChart"></canvas>
                 </div>
+                <p id="income-age-note" class="text-muted small mt-2 hidden">Note: Income data by age group is not available. Showing overall median income.</p>
               </div>
             </div>
           </div>
@@ -238,30 +263,6 @@
 
     </div><!-- end #map-wrapper -->
 
-    <section class="container my-5">
-      <div class="row">
-        <div class="col">
-          <h2 class="mb-3 text-center text-md-start">Download the data</h2>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <p class="lead">
-            Use the buttons below to download the data for the above map. Data can be downloaded at the level of U.S. county,
-            commuting zone, and public or private non-profit institution. More information about commuting zones can be found
-            <a href="https://usa.ipums.org/usa-action/variables/COMZONE#description_section">on the IPUMS website</a>.
-          </p>
-        </div>
-      </div>
-      <div class="row mt-4">
-        <div class="col d-flex flex-wrap justify-content-center gap-3">
-          <button type="button" class="btn btn-primary purple">Institution</button>
-          <button type="button" class="btn btn-primary purple">Commuting Zone</button>
-          <button type="button" class="btn btn-primary purple">County</button>
-        </div>
-      </div>
-    </section>
-
     <section class="container my-5 info-section">
       <div class="row">
         <div class="col">
@@ -275,6 +276,9 @@
             by <a href="https://ticas.org/">The Institute for College Access and Success (TICAS)</a> in partnership with <a href="https://www.mdrc.org/">
             MDRC</a>. In collaboration with institutions, the initative aims to advance college completion and economic mobility for Black and Latino students
             in rural communities across the South and Southwest.
+          </p>
+          <p class="lead">
+            TICAS would like to thank Dr. Jared Colston for his partnership and contributions to this project.
           </p>
         </div>
       </div>

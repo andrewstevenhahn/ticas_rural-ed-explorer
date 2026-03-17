@@ -29,7 +29,8 @@ An interactive map tool for exploring rural education data across U.S. commuting
   - Local institutions (public and private non-profit)
 - Click a county on the map or in the chart to drill down to county-level data
 - "Return to Commuting Zone" and "Reset Map" buttons in the data panel for navigation
-- Overlay of higher education institutions (scoped to the selected zone or county)
+- Table of local higher education institutions (scoped to the selected zone or county)
+- Filter charts to a specific age group or racial/ethnic group ("Focus on a Group" control)
 - Map controls panel hides when a region is selected to maximize map space
 - Data download (coming soon)
 
@@ -126,7 +127,6 @@ dist/               # Production build output (generated)
 - [ ] Data download buttons not yet wired up
 - [ ] Institution overlay behavior under investigation (known bug)
 - [ ] Institution data and filtering logic needs review across all states
-- [ ] "Feature of interest" mechanism — planned, requirements TBD
 - [ ] Accessibility audit pending
 
 ---

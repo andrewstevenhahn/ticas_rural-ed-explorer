@@ -39,10 +39,15 @@ const regionTitle = document.getElementById('region-title');
 const regionType = document.getElementById('region-type');
 const regionMeta = document.getElementById('region-meta');
 const downloadRegionName = document.getElementById('download-region-name');
+const foiMetricSelect = document.getElementById('foi-metric');
+const foiCategorySelect = document.getElementById('foi-category');
 
 let countyRuralChart = null;
 let selectedCZFeature = null;
+let selectedCountyFeature = null;
 let instAllFeatures = null; // lazily populated on first selection
+let foiMetric = 'none';
+let foiCategory = null;
 
 // set logo from asset
 logoImg.src = logo;
@@ -238,6 +243,7 @@ map.on('mouseleave', 'county', () => {
 // handle clicks
 function selectCZ(czFeature) {
   selectedCZFeature = czFeature;
+  selectedCountyFeature = null;
   titleCardActions.classList.remove('hidden');
   mapControlsWrapper.classList.add('hidden');
   returnToCZContainer.classList.add('hidden');
@@ -284,6 +290,7 @@ map.on('click', 'cz20', (e) => {
 });
 
 function selectCounty(countyFeature) {
+  selectedCountyFeature = countyFeature;
   const selectedValue = countyFeature.properties.GEOID;
   map.setFilter('county', ['==', ['get', 'GEOID'], selectedValue]);
 
@@ -337,6 +344,12 @@ returnToCZBtn.addEventListener('click', () => {
 resetButton.addEventListener("click", function() {
   if (searchMarker) { searchMarker.remove(); searchMarker = null; czSearchInput.value = ''; }
   selectedCZFeature = null;
+  selectedCountyFeature = null;
+  foiMetric = 'none';
+  foiCategory = null;
+  foiMetricSelect.value = 'none';
+  foiCategorySelect.innerHTML = '<option value="">— select a metric first —</option>';
+  foiCategorySelect.disabled = true;
   returnToCZContainer.classList.add('hidden');
   titleCardActions.classList.add('hidden');
   popRangeIn.disabled = false;
@@ -581,6 +594,79 @@ const INCOME_CHART = {
   borderColor: TICAS_COLORS.purple
 };
 
+// ── Feature of Interest ────────────────────────────────────────────────────────
+
+const FOI_AGE_OPTIONS = [
+  { value: '18_24', label: '18–24' },
+  { value: '25_34', label: '25–34' },
+  { value: '35_44', label: '35–44' },
+  { value: '45_54', label: '45–54' },
+  { value: '55_64', label: '55–64' },
+];
+
+const FOI_RACE_OPTIONS = [
+  { value: 'asian',    label: 'Asian' },
+  { value: 'black',    label: 'Black' },
+  { value: 'hispanic', label: 'Hispanic' },
+  { value: 'white',    label: 'White' },
+];
+
+function getAttainmentConfig() {
+  if (foiMetric === 'none' || !foiCategory) return ATTAINMENT_CHART;
+  return {
+    ...ATTAINMENT_CHART,
+    fields: ['pct_less_hs', `pct_hs_${foiCategory}`, `pct_scnd_${foiCategory}`, `pct_coll_${foiCategory}`],
+    colors: ['#cccccc', TICAS_COLORS.orange, TICAS_COLORS.teal, TICAS_COLORS.magenta]
+  };
+}
+
+function getFoiLabel() {
+  if (foiMetric === 'none' || !foiCategory) return null;
+  const options = foiMetric === 'age' ? FOI_AGE_OPTIONS : FOI_RACE_OPTIONS;
+  const opt = options.find(o => o.value === foiCategory);
+  return opt ? opt.label : null;
+}
+
+function getIncomeConfig() {
+  if (foiMetric === 'race' && foiCategory) {
+    return {
+      ...INCOME_CHART,
+      fields: [`mdn_inc_hs_${foiCategory}`, `mdn_inc_scnd_${foiCategory}`, `mdn_inc_coll_${foiCategory}`]
+    };
+  }
+  return INCOME_CHART;
+}
+
+function refreshChartsForCurrentFeature() {
+  const feature = selectedCountyFeature || selectedCZFeature;
+  if (!feature) return;
+  updateRaceDonutChart(feature);
+  updateAttainmentChart(feature);
+  updateIncomeBarChart(feature);
+}
+
+foiMetricSelect.addEventListener('change', () => {
+  foiMetric = foiMetricSelect.value;
+  foiCategory = null;
+
+  if (foiMetric === 'none') {
+    foiCategorySelect.disabled = true;
+    foiCategorySelect.innerHTML = '<option value="">— select a metric first —</option>';
+  } else {
+    const options = foiMetric === 'age' ? FOI_AGE_OPTIONS : FOI_RACE_OPTIONS;
+    foiCategorySelect.innerHTML = options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+    foiCategorySelect.disabled = false;
+    foiCategory = options[0].value;
+  }
+
+  refreshChartsForCurrentFeature();
+});
+
+foiCategorySelect.addEventListener('change', () => {
+  foiCategory = foiCategorySelect.value;
+  refreshChartsForCurrentFeature();
+});
+
 // ── Shared renderers ───────────────────────────────────────────────────────────
 
 function renderDoughnut(config, chartRef, feature) {
@@ -648,9 +734,26 @@ let raceDonutChart = null;
 let attainmentChart = null;
 let incomeBarChart = null;
 
-function updateRaceDonutChart(feature)  { raceDonutChart  = renderDoughnut(RACE_CHART,       raceDonutChart,  feature); }
-function updateAttainmentChart(feature) { attainmentChart = renderDoughnut(ATTAINMENT_CHART, attainmentChart, feature); }
-function updateIncomeBarChart(feature)  { incomeBarChart  = renderHorizontalBar(INCOME_CHART, incomeBarChart, feature); }
+function updateRaceDonutChart(feature) {
+  raceDonutChart = renderDoughnut(RACE_CHART, raceDonutChart, feature);
+  document.getElementById('race-age-note').classList.toggle('hidden', foiMetric !== 'age');
+}
+
+function updateAttainmentChart(feature) {
+  attainmentChart = renderDoughnut(getAttainmentConfig(), attainmentChart, feature);
+  const label = getFoiLabel();
+  const prefix = foiMetric === 'age' ? 'Ages ' : '';
+  document.getElementById('attainment-chart-title').textContent =
+    label ? `Educational Attainment: ${prefix}${label}` : 'Educational Attainment';
+}
+
+function updateIncomeBarChart(feature) {
+  incomeBarChart = renderHorizontalBar(getIncomeConfig(), incomeBarChart, feature);
+  document.getElementById('income-age-note').classList.toggle('hidden', foiMetric !== 'age');
+  const label = getFoiLabel();
+  document.getElementById('income-chart-title').textContent =
+    (foiMetric === 'race' && label) ? `Income by Educational Attainment: ${label}` : 'Income by Educational Attainment';
+}
 
 function highlightBar(chart, idValue) {
   // this clears off any tooltip highlights
