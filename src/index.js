@@ -1,8 +1,6 @@
-//TODO: Implement a "feature of interest" mechanism to update the charts
-
-//TODO: Add institution points
-//TODO: Accessibility check
-//TODO: Mobile check
+// Open items:
+// - Institution points overlay on the map (source is loaded but not yet rendered as a layer)
+// - Accessibility audit
 
 // import assets, libraries and custom styles
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -11,12 +9,12 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { geoContains, geoBounds } from 'd3';
 import Chart from "chart.js/auto"
 import './styles.css';
-import logo from './assets/Books-UC-ORANGE.png';
+import logo from './assets/ticas-logo.png';
 
 // import geojson data
-import countyData from "./data/corrected_county_num.geojson";
-import czData from "./data/corrected_county_num_3.geojson";
-import instData from "./data/institution_j.geojson";
+import countyData from "./data/counties.geojson";
+import czData from "./data/commuting-zones.geojson";
+import instData from "./data/institutions.geojson";
 
 // define DOM elements
 const popRangeIn = document.getElementById('populationRange');
@@ -24,7 +22,6 @@ const rurRangeIn = document.getElementById('ruralRange');
 const rurRangeVal = document.getElementById('ruralRangeValue');
 const popRangeVal = document.getElementById('populationRangeValue');
 const resetButton = document.getElementById("reset-button");
-const tiles = document.getElementsByClassName("chart-tile");
 const chartArea = document.getElementById("chartArea")
 
 const chartPanel = document.getElementById("chart-panel")
@@ -51,6 +48,10 @@ let foiCategory = null;
 
 // set logo from asset (navbar is absent in the embed template)
 if (logoImg) logoImg.src = logo;
+
+// Format helpers that tolerate missing values — some features have null pop2024/pct_rural
+const fmtNum = v => (v === null || v === undefined) ? 'N/A' : v.toLocaleString();
+const fmtPct = v => (v === null || v === undefined) ? 'N/A' : (v * 100).toFixed(0) + '%';
 
 
 // initial map view — reused by the reset button so it always returns here
@@ -102,8 +103,6 @@ map.on("load", () => {
   });
 
   // render commuting zones
-  //TODO: filter the institutions on county view. 
-
   map.addLayer({
     id: "cz20",
     type: "fill",
@@ -155,9 +154,16 @@ async function performSearch() {
   if (!query) return;
 
   const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=1&lang=en&bbox=-180,18,-66,72`;
-  const res = await fetch(url);
-  const data = await res.json();
-  if (!data.features.length) return;
+  let data;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Geocoder responded ${res.status}`);
+    data = await res.json();
+  } catch (err) {
+    console.warn('Search failed:', err);
+    return;
+  }
+  if (!data.features || !data.features.length) return;
 
   const center = data.features[0].geometry.coordinates;
 
@@ -201,16 +207,11 @@ map.on('mousemove', 'cz20', (e) => {
 
   map.getCanvas().style.cursor = 'pointer';
 
-  const pop_num = feature.properties.pop2024;
-  const rur_num = feature.properties.pct_rural;
-  const pop_str = pop_num ? pop_num.toLocaleString() : "N/A";
-  const rur_str = rur_num ? (rur_num * 100).toFixed(0) + '%' : "N/A";
-
   const description =
     `<div class="map-tooltip">` +
     `<strong>${feature.properties.CZName}</strong>` +
-    `<p>Population 2024: ${pop_str}</p>` +
-    `<p>Percent Rural: ${rur_str}</p>` +
+    `<p>Population 2024: ${fmtNum(feature.properties.pop2024)}</p>` +
+    `<p>Percent Rural: ${fmtPct(feature.properties.pct_rural)}</p>` +
     `<p><em>Click for more details</em></p>` +
     `</div>`;
 
@@ -231,8 +232,8 @@ map.on('mousemove', 'county', (e) => {
   const description =
     `<div class="map-tooltip">` +
     `<strong>${feature.properties.county_name} County, ${feature.properties['commuting-zones-2020_StateName']}</strong>` +
-    `<p>Population 2024: ${feature.properties.pop2024.toLocaleString()}</p>` +
-    `<p>Percent Rural: ${(feature.properties.pct_rural * 100).toFixed(0)}%</p>` +
+    `<p>Population 2024: ${fmtNum(feature.properties.pop2024)}</p>` +
+    `<p>Percent Rural: ${fmtPct(feature.properties.pct_rural)}</p>` +
     `<p><em>Click for more details</em></p>` +
     `</div>`;
 
@@ -302,9 +303,6 @@ function selectCounty(countyFeature) {
 
   const [[cw, cs], [ce, cn]] = geoBounds(countyFeature);
   map.fitBounds([[cw, cs], [ce, cn]], { padding: 40, essential: true });
-  for (let i = 0; i < tiles.length; i++) {
-    tiles[i].classList.remove("hidden");
-  }
   updateCountyTitleCard(countyFeature);
   highlightBar(countyRuralChart, countyFeature.properties.county_name);
   updateRaceDonutChart(countyFeature);
@@ -425,8 +423,8 @@ function updateCZTitleCard(czFeature) {
   }
 
   regionMeta.innerHTML =
-    `<li>Population (2024): <strong>${p.pop2024.toLocaleString()}</strong></li>` +
-    `<li>Percent rural: <strong>${(p.pct_rural * 100).toFixed(0)}%</strong></li>` +
+    `<li>Population (2024): <strong>${fmtNum(p.pop2024)}</strong></li>` +
+    `<li>Percent rural: <strong>${fmtPct(p.pct_rural)}</strong></li>` +
     (statesText ? `<li>States: <strong>${statesText}</strong></li>` : '') +
     `<li>On average, <strong>${p.CZAvgContainment.toFixed(1)}%</strong> of residents who live within these counties commute to work within this zone.</li>`;
 }
@@ -438,8 +436,8 @@ function updateCountyTitleCard(countyFeature) {
   regionType.textContent = 'County';
   downloadRegionName.textContent = countyDisplayName;
   regionMeta.innerHTML =
-    `<li>Population (2024): <strong>${p.pop2024.toLocaleString()}</strong></li>` +
-    `<li>Percent rural: <strong>${(p.pct_rural * 100).toFixed(0)}%</strong></li>` +
+    `<li>Population (2024): <strong>${fmtNum(p.pop2024)}</strong></li>` +
+    `<li>Percent rural: <strong>${fmtPct(p.pct_rural)}</strong></li>` +
     `<li>In this county, <strong>${p['commuting-zones-2020_CZContainment'].toFixed(1)}%</strong> of residents commute to work within this commuting zone.</li>`;
 }
 

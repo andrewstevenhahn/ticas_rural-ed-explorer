@@ -1,16 +1,16 @@
 {
-  "name": "ticas",
+  "name": "ticas-rural-ed-explorer",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Interactive map explorer of rural education data across U.S. commuting zones and counties (TICAS Rural Reconnect Initiative).",
+  "private": true,
   "scripts": {
     "start": "nodemon --watch src --exec \"webpack serve --open --mode development\"",
     "build": "webpack --mode production",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["maplibre", "choropleth", "commuting-zones", "rural-education", "ticas"],
+  "author": "TICAS",
   "license": "ISC",
   "devDependencies": {
     "copy-webpack-plugin": "^12.0.2",
