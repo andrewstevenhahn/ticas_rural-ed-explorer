@@ -53,11 +53,15 @@ let foiCategory = null;
 if (logoImg) logoImg.src = logo;
 
 
+// initial map view — reused by the reset button so it always returns here
+const INITIAL_CENTER = [-98.5, 39.5]; // centered on the US
+const INITIAL_ZOOM = 3.5;
+
 const map = new maplibregl.Map({
   container: 'map',
   style: 'https://tiles.openfreemap.org/styles/positron',
-  center: [-98.5, 39.5], // centered on the US
-  zoom: 3.5,
+  center: INITIAL_CENTER,
+  zoom: INITIAL_ZOOM,
   cooperativeGestures: true,
   attributionControl: false,
   dragRotate: false,
@@ -360,8 +364,8 @@ resetButton.addEventListener("click", function() {
   mapControls.classList.remove('show')
   mapControlsWrapper.classList.remove('hidden')
   map.flyTo({
-    center: [-95.5795, 39.8283],
-    zoom: 3,
+    center: INITIAL_CENTER,
+    zoom: INITIAL_ZOOM,
     essential: true
   });
 
