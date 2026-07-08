@@ -49,8 +49,8 @@ let instAllFeatures = null; // lazily populated on first selection
 let foiMetric = 'none';
 let foiCategory = null;
 
-// set logo from asset
-logoImg.src = logo;
+// set logo from asset (navbar is absent in the embed template)
+if (logoImg) logoImg.src = logo;
 
 
 const map = new maplibregl.Map({
@@ -384,15 +384,6 @@ function applyFilters() {
     [">=", ["get", "pct_rural"], Number(rurRangeIn.value) / 100]
   ]);
 }
-
-// show instructions once everything is loaded
-document.addEventListener('DOMContentLoaded', () => {
-  const introModal = new bootstrap.Modal(document.getElementById('introModal'), {
-    backdrop: 'static',
-    keyboard: true
-  });
-  introModal.show();
-});
 
 const sliderToPop = v => Math.round(Math.pow(10, Number(v)));
 

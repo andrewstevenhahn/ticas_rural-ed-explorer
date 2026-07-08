@@ -18,8 +18,12 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './public/index.html', // use your template
+      template: './public/index.html', // standalone prototype page
       filename: 'index.html',          // output in dist/
+    }),
+    new HtmlWebpackPlugin({
+      template: './public/embed.html', // graphic-only page for WordPress iframe
+      filename: 'embed.html',          // output in dist/
     }),
   ],
   devServer: {

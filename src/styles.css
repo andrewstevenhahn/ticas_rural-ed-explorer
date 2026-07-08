@@ -62,6 +62,14 @@ body {
   height: 80vh;
 }
 
+/* Embed page (WordPress iframe): fill the iframe, no page chrome */
+.ticas-embed {
+  margin: 0;
+}
+.ticas-embed #map-wrapper {
+  height: 100vh;
+}
+
 #map-container {
   flex: 1;
   position: relative;
@@ -106,6 +114,16 @@ body {
     width: 100%;
     border-left: none;
     border-top: 2px solid #e8dfc8;
+  }
+  /* Embed stays a fixed-height, self-contained iframe: keep the map fixed and
+     let the stacked chart panel scroll internally instead of growing the page. */
+  .ticas-embed #map-wrapper {
+    height: 100vh;
+    min-height: 0;
+  }
+  .ticas-embed #chart-panel {
+    flex: 1;
+    min-height: 0;
   }
 }
 

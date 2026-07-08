@@ -99,11 +99,56 @@ npm run deploy
 
 ## Deployment
 
-<!--
-  Describe how this is deployed and where it lives.
-  e.g. "Deployed to GitHub Pages at [url]. Embedded in the TICAS WordPress site via iframe."
-  Note any known quirks with the WordPress embedding or iframe sizing.
--->
+`npm run deploy` builds and publishes `dist/` to the `gh-pages` branch via
+[`gh-pages`](https://www.npmjs.com/package/gh-pages). The build emits **two** pages that
+share the same JS bundle:
+
+- **Standalone / prototype:** `https://andrewstevenhahn.github.io/ticas_rural-ed-explorer/`
+  — full page with navbar, "About" section, and footer.
+- **Embed (WordPress):** `https://andrewstevenhahn.github.io/ticas_rural-ed-explorer/embed.html`
+  — graphic only (map + chart panel), sized to fill its container. This is the URL to iframe.
+
+---
+
+## Embedding in WordPress
+
+The graphic is embedded into a prebuilt WordPress page via an `<iframe>` pointing at the
+`embed.html` page above. An iframe is used deliberately: the app loads Bootstrap CSS globally
+and applies `!important` font rules to base elements, so an iframe fully isolates it from
+(and protects it from) the WordPress theme's styles and scripts.
+
+### Quick start — Custom HTML block
+
+Paste this into a **Custom HTML** block in the page's graphic placeholder:
+
+```html
+<div style="position:relative;width:100%;max-width:1200px;margin:0 auto;">
+  <iframe
+    src="https://andrewstevenhahn.github.io/ticas_rural-ed-explorer/embed.html"
+    title="TICAS Rural Completion Explorer"
+    loading="lazy"
+    style="width:100%;height:85vh;min-height:600px;border:0;"
+    sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+</div>
+```
+
+Notes:
+- The `sandbox` attribute needs `allow-scripts` **and** `allow-same-origin` for MapLibre and
+  the GitHub Pages assets to load.
+- GitHub Pages sends no `X-Frame-Options` header, so framing from the WordPress domain works.
+- All resources (gh-pages, OpenFreeMap tiles) are served over HTTPS — no mixed-content issues
+  on an HTTPS WordPress site.
+- The embed page is a fixed-height, self-contained layout: the chart panel scrolls **inside**
+  the iframe, so no cross-origin height messaging is required. Adjust the iframe `height`
+  to taste.
+
+### Future upgrade — shortcode plugin
+
+If a security plugin or editor role strips raw iframes from content (common in locked-down
+enterprise WordPress), replace the Custom HTML block with a small server-rendered shortcode
+plugin exposing e.g. `[ticas_rural_explorer]`. Because it renders on the server it bypasses
+`wp_kses` filtering of stored content, and it centralizes the embed URL and height in one
+place. (Deferred for now.)
 
 ---
 
@@ -116,7 +161,8 @@ src/
   assets/           # Static assets (logo, etc.)
   data/             # GeoJSON source files
 public/
-  index.html        # App shell
+  index.html        # Standalone app shell (navbar, about, footer)
+  embed.html        # Graphic-only shell for the WordPress iframe
 dist/               # Production build output (generated)
 ```
 
