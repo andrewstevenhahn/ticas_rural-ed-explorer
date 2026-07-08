@@ -144,14 +144,42 @@ Notes:
 - All resources (gh-pages, OpenFreeMap tiles) are served over HTTPS — no mixed-content issues
   on an HTTPS WordPress site.
 
-### Fallback — shortcode plugin
+### Full-width / responsive — shortcode (recommended for this site)
 
-If the site's sanitizer is tight enough to strip even `width`/`height` (or removes the
-`<iframe>` entirely), use a small **server-rendered shortcode** instead. Its output is not
-subject to content `wp_kses`, so any markup passes through intact, and it centralizes the URL
-and height in one place. Register `[ticas_rural_explorer height="800"]` via a plugin file, a
-"Code Snippets" plugin entry, or the child theme's `functions.php`, then drop the shortcode
-into the placeholder in place of raw HTML.
+The plain Custom HTML iframe is stuck at the width of whatever theme column the placeholder
+lives in (on the TICAS test page that is a `col-md-7` prose column, ~58% wide), and the
+sanitizer strips any `style`/`class` we'd use to break out. The fix is a **server-rendered
+shortcode** — its output bypasses content `wp_kses`, so it can carry a full-bleed breakout
+wrapper and responsive CSS that survive intact.
+
+The canonical code lives in [`wordpress/ticas-rural-explorer.php`](wordpress/ticas-rural-explorer.php).
+It renders an edge-to-edge (`100vw`) iframe with a fixed desktop pixel height and a `vh`-based
+height under 768px. Usage once installed:
+
+```
+[ticas_rural_explorer]
+[ticas_rural_explorer height="900" mobile_height="80vh"]
+```
+
+Place it in a **Shortcode block** (a Custom HTML block will *not* run shortcodes).
+
+**Installing via WPCode** (no file access needed):
+1. WordPress admin → **Code Snippets (WPCode)** → **+ Add Snippet** → **Add Your Custom Code
+   (New Snippet)** → hover the blank box → **Use snippet**.
+2. Set the code type to **PHP Snippet**. Give it a title (e.g. "TICAS Rural Explorer shortcode").
+3. Paste the code from `wordpress/ticas-rural-explorer.php` **between** the
+   `=== WPCODE: COPY FROM HERE ===` and `=== WPCODE: COPY TO HERE ===` markers (the function +
+   `add_shortcode` line — no `<?php` tag, no plugin header).
+4. Under **Insertion**, choose **Auto Insert**, Location **Run Everywhere**.
+5. Toggle the switch to **Active** (top right) and **Save Snippet**.
+6. Edit the page: replace the Custom HTML block in the placeholder with a **Shortcode** block
+   containing `[ticas_rural_explorer]`. Update the page.
+
+Alternatively the same file works as a standalone uploadable plugin (see its header comment).
+
+> Note on full-bleed: `100vw` can introduce a small horizontal scrollbar on themes that don't
+> set `overflow-x: hidden` on the page. If that happens, either add that rule to the theme or
+> switch the wrapper from `100vw` to the theme container width.
 
 ---
 
