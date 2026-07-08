@@ -27,7 +27,6 @@ npm-debug.log*
 # npm
 .npm
 *.tgz
-package-lock.json
 
 # QGIS
 *.qmd
