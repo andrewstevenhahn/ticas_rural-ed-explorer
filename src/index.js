@@ -337,6 +337,7 @@ returnToCZBtn.addEventListener('click', () => {
   updateAttainmentChart(selectedCZFeature);
   renderInstitutionTable(czInstitutions);
 
+  selectedCountyFeature = null; // back at CZ view — keep state in sync for downloads/charts
   returnToCZContainer.classList.add('hidden');
 });
 
@@ -761,4 +762,124 @@ function highlightBar(chart, idValue) {
 
   chart.update();
 }
+
+// ── Data download (CSV + data dictionary) ───────────────────────────────────────
+// EXPORT_SCHEMA is the single source of truth for the exported columns, so the data
+// CSV and the dictionary CSV can never drift. Descriptions are the authoritative
+// definitions from the project's "FINAL DATA.xlsx" Data Dictionary tab, with two
+// source copy-paste errors (pct_coll_18_24 / pct_coll_25_34, which read "high school
+// diploma" upstream) and two spacing typos corrected. Field names are the actual data
+// field names — note the dictionary tab labels these pop2020 / pct_in_coll, but the
+// data (and this tool) use pop2024 / pct_enroll.
+
+const csvStat = (field, description) => ({ field, description, cz: field, county: field });
+
+const EXPORT_AGE_GROUPS = [
+  ['18_24', 'age 18-24'], ['25_34', 'age 25-34'], ['35_44', 'age 35-44'],
+  ['45_54', 'age 45-54'], ['55_64', 'age 55-64'],
+];
+const EXPORT_RACE_GROUPS = [
+  ['asian', 'Asian'], ['black', 'Black'], ['hispanic', 'Hispanic/Latino'], ['white', 'White'],
+];
+const PCT_ATTAIN = {
+  hs:   'a high school diploma or GED',
+  scnd: 'some college but no degree and not currently enrolled',
+  coll: 'a college degree',
+};
+const INC_ATTAIN = {
+  hs:   'a high school diploma or GED',
+  scnd: 'some college but no degree',
+  coll: 'a college degree',
+};
+
+const EXPORT_SCHEMA = [
+  { field: 'geography_type', description: 'Row type: "Commuting Zone" summary or an individual "County"',
+    cz: () => 'Commuting Zone', county: () => 'County' },
+  { field: 'cz',          description: 'Commuting Zone ID',   cz: 'CZ2020', county: 'CZ20' },
+  { field: 'cz_name',     description: 'Commuting Zone name', cz: 'CZName', county: 'commuting-zones-2020_CZName' },
+  { field: 'county',      description: 'County ID',           cz: null,     county: 'GEOID' },
+  { field: 'county_name', description: 'County name',         cz: null,     county: 'county_name' },
+  { field: 'state',       description: 'State name',          cz: null,     county: 'state' },
+  csvStat('pop2024',      'Population estimate'),
+  csvStat('pct_rural',    'Proportion of 2020 population living in a rural area'),
+  csvStat('pct_asian',    'Proportion of population (Asian)'),
+  csvStat('pct_black',    'Proportion of population (Black)'),
+  csvStat('pct_hispanic', 'Proportion of population (Hispanic/Latino)'),
+  csvStat('pct_white',    'Proportion of population (White)'),
+  csvStat('pct_amind',    'Proportion of population (American Indian/Alaska Native)'),
+  csvStat('pct_multirace','Proportion of population (Two or more races)'),
+  csvStat('pct_otherrace','Proportion of population (Other race)'),
+  csvStat('pct_in_hs',    'Proportion of population currently enrolled in high school'),
+  csvStat('pct_enroll',   'Proportion of population currently enrolled in postsecondary education'),
+  csvStat('pct_less_hs',  'Proportion of population without a high school diploma or GED and not currently enrolled'),
+  csvStat('pct_hs',       'Proportion of population with a high school diploma or GED'),
+  csvStat('pct_scnd',     'Proportion of population with some college but no degree and not currently enrolled'),
+  csvStat('pct_coll',     'Proportion of population with a college degree'),
+  // attainment broken out by age then by race, for each attainment level
+  ...['hs', 'scnd', 'coll'].flatMap(attain => [
+    ...EXPORT_AGE_GROUPS.map(([code, label]) =>
+      csvStat(`pct_${attain}_${code}`, `Proportion of population ${label} with ${PCT_ATTAIN[attain]}`)),
+    ...EXPORT_RACE_GROUPS.map(([code, label]) =>
+      csvStat(`pct_${attain}_${code}`, `Proportion of ${label} population with ${PCT_ATTAIN[attain]}`)),
+  ]),
+  // median income overall, then by race
+  ...['hs', 'scnd', 'coll'].map(attain =>
+    csvStat(`mdn_inc_${attain}`, `Median income of the population with ${INC_ATTAIN[attain]}`)),
+  ...EXPORT_RACE_GROUPS.flatMap(([code, label]) =>
+    ['hs', 'scnd', 'coll'].map(attain =>
+      csvStat(`mdn_inc_${attain}_${code}`, `Median income of the ${label} population with ${INC_ATTAIN[attain]}`))),
+];
+
+function toCSV(columns, rows) {
+  const esc = v => {
+    if (v === null || v === undefined) return '';
+    const s = String(v);
+    return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  return [columns, ...rows].map(row => row.map(esc).join(',')).join('\r\n');
+}
+
+function triggerDownload(filename, text, mime = 'text/csv;charset=utf-8') {
+  const blob = new Blob(['﻿' + text], { type: mime }); // BOM so Excel reads UTF-8
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+// Rows for the geography currently shown: a single county row in county view, or a
+// CZ summary row followed by one row per county in commuting-zone view.
+function currentExportRows() {
+  const toRow = (feat, geo) => EXPORT_SCHEMA.map(c => {
+    const src = c[geo];
+    if (typeof src === 'function') return src(feat);
+    return src == null ? '' : feat.properties[src];
+  });
+  if (selectedCountyFeature) return [toRow(selectedCountyFeature, 'county')];
+  if (!selectedCZFeature) return [];
+  const czVal = selectedCZFeature.properties.CZ2020;
+  const src = map.getSource('county');
+  const counties = (src && src._data ? src._data.features : []).filter(f => f.properties.CZ20 == czVal);
+  return [toRow(selectedCZFeature, 'cz'), ...counties.map(f => toRow(f, 'county'))];
+}
+
+function regionSlug() {
+  const name = (regionTitle.textContent || 'region').trim().toLowerCase();
+  return name.replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'region';
+}
+
+document.getElementById('download-csv-btn').addEventListener('click', () => {
+  if (!selectedCZFeature && !selectedCountyFeature) return;
+  const header = EXPORT_SCHEMA.map(c => c.field);
+  triggerDownload(`ticas_${regionSlug()}_data.csv`, toCSV(header, currentExportRows()));
+});
+
+document.getElementById('download-dict-btn').addEventListener('click', () => {
+  const rows = EXPORT_SCHEMA.map(c => [c.field, c.description]);
+  triggerDownload('ticas_data_dictionary.csv', toCSV(['field', 'description'], rows));
+});
 
