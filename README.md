@@ -122,33 +122,36 @@ and applies `!important` font rules to base elements, so an iframe fully isolate
 Paste this into a **Custom HTML** block in the page's graphic placeholder:
 
 ```html
-<div style="position:relative;width:100%;max-width:1200px;margin:0 auto;">
-  <iframe
-    src="https://andrewstevenhahn.github.io/ticas_rural-ed-explorer/embed.html"
-    title="TICAS Rural Completion Explorer"
-    loading="lazy"
-    style="width:100%;height:85vh;min-height:600px;border:0;"
-    sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
-</div>
+<iframe
+  src="https://andrewstevenhahn.github.io/ticas_rural-ed-explorer/embed.html"
+  title="TICAS Rural Completion Explorer"
+  width="100%"
+  height="800"
+  frameborder="0"
+  allowfullscreen></iframe>
 ```
 
 Notes:
-- The `sandbox` attribute needs `allow-scripts` **and** `allow-same-origin` for MapLibre and
-  the GitHub Pages assets to load.
+- **Size via the `width`/`height` HTML attributes, not inline `style`.** WordPress's `wp_kses`
+  sanitizer strips `style` (and `sandbox`, `loading`, wrapper `<div>`s) from content-block
+  iframes on many enterprise sites — leaving only `src`/`title`, so a `style`-sized iframe
+  collapses to the browser default ~300×150px. `width`/`height` attributes survive the
+  allow-list. `height` must be a pixel integer (percent/`vh` are invalid on that attribute).
+- The embed page is a fixed-height, self-contained layout: the chart panel scrolls **inside**
+  the iframe, so a fixed pixel height is fine and no cross-origin height messaging is needed.
+  Adjust `height` to taste.
 - GitHub Pages sends no `X-Frame-Options` header, so framing from the WordPress domain works.
 - All resources (gh-pages, OpenFreeMap tiles) are served over HTTPS — no mixed-content issues
   on an HTTPS WordPress site.
-- The embed page is a fixed-height, self-contained layout: the chart panel scrolls **inside**
-  the iframe, so no cross-origin height messaging is required. Adjust the iframe `height`
-  to taste.
 
-### Future upgrade — shortcode plugin
+### Fallback — shortcode plugin
 
-If a security plugin or editor role strips raw iframes from content (common in locked-down
-enterprise WordPress), replace the Custom HTML block with a small server-rendered shortcode
-plugin exposing e.g. `[ticas_rural_explorer]`. Because it renders on the server it bypasses
-`wp_kses` filtering of stored content, and it centralizes the embed URL and height in one
-place. (Deferred for now.)
+If the site's sanitizer is tight enough to strip even `width`/`height` (or removes the
+`<iframe>` entirely), use a small **server-rendered shortcode** instead. Its output is not
+subject to content `wp_kses`, so any markup passes through intact, and it centralizes the URL
+and height in one place. Register `[ticas_rural_explorer height="800"]` via a plugin file, a
+"Code Snippets" plugin entry, or the child theme's `functions.php`, then drop the shortcode
+into the placeholder in place of raw HTML.
 
 ---
 
